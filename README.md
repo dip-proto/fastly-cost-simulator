@@ -12,7 +12,7 @@ All tools were given the identical prompt:
 - Maximum 5 follow-up prompts allowed
 - Stock configuration (no MCP servers or custom tweaks)
 - Zero manual code edits
-- Same premium models used across all tools
+- Similar premium models used across all tools
 
 ## 📁 Project Structure
 

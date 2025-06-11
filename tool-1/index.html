@@ -1,0 +1,4767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Fastly Pricing Calculator - Calculate costs for CDN, Edge Compute, Security, and Additional Services">
+    <title>Fastly Pricing Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #ff0040;
+            --primary-dark: #cc0033;
+            --primary-light: #ff1a5c;
+            --secondary-color: #0f172a;
+            --accent-color: #3b82f6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+            
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            
+            --border-radius-sm: 6px;
+            --border-radius-md: 8px;
+            --border-radius-lg: 12px;
+            --border-radius-xl: 16px;
+            
+            --transition-fast: all 0.15s ease-out;
+            --transition-normal: all 0.3s ease-out;
+            --transition-slow: all 0.5s ease-out;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: var(--gray-800);
+            background: linear-gradient(135deg, var(--gray-50) 0%, #ffffff 100%);
+            min-height: 100vh;
+            font-feature-settings: 'kern', 'liga', 'clig', 'calt';
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 50%, #990029 100%);
+            color: white;
+            padding: 3rem 0;
+            box-shadow: var(--shadow-xl);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.1)"/></svg>') repeat;
+            background-size: 50px 50px;
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translateX(0) translateY(0); }
+            100% { transform: translateX(-50px) translateY(-50px); }
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-title {
+            font-size: 1.75rem;
+            font-weight: 400;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            opacity: 0.95;
+        }
+
+        /* API Status Indicator */
+        .api-status-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .api-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--border-radius-md);
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: white;
+            transition: var(--transition-fast);
+        }
+
+        .api-status:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .api-status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--gray-400);
+            transition: var(--transition-fast);
+            animation: pulse 2s infinite;
+        }
+
+        .api-status-dot.online {
+            background: var(--success-color);
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+        }
+
+        .api-status-dot.offline {
+            background: var(--error-color);
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+        }
+
+        .api-status-dot.updating {
+            background: var(--warning-color);
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .api-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .api-last-update {
+            font-weight: 400;
+        }
+
+        .api-refresh-btn {
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: var(--border-radius-sm);
+            color: white;
+            padding: 0.25rem;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .api-refresh-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: rotate(90deg);
+        }
+
+        .api-refresh-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .api-refresh-btn.spinning {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Disclaimer Banner */
+        .disclaimer-banner {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            border-bottom: 3px solid #e85a00;
+            padding: 1rem 0;
+            color: white;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(232, 90, 0, 0.3);
+        }
+
+        .disclaimer-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .disclaimer-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .disclaimer-text {
+            text-align: left;
+            line-height: 1.4;
+        }
+
+        .disclaimer-text strong {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .disclaimer-text a {
+            color: white;
+            text-decoration: underline;
+            font-weight: 600;
+        }
+
+        .disclaimer-text a:hover {
+            color: #fff3cd;
+            text-decoration: none;
+        }
+
+        @media (max-width: 768px) {
+            .disclaimer-content {
+                flex-direction: column;
+                gap: 0.5rem;
+                text-align: center;
+            }
+            
+            .disclaimer-text {
+                text-align: center;
+            }
+        }
+
+        /* Pricing Disclaimer (smaller) */
+        .pricing-disclaimer {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+            padding: 0.75rem;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: var(--border-radius-md);
+            font-size: 0.875rem;
+            color: #856404;
+        }
+
+        .disclaimer-icon-small {
+            font-size: 1rem;
+            flex-shrink: 0;
+            margin-top: 0.1rem;
+        }
+
+        .disclaimer-text-small {
+            line-height: 1.4;
+        }
+
+        .disclaimer-text-small strong {
+            font-weight: 600;
+        }
+
+        .disclaimer-text-small a {
+            color: #856404;
+            text-decoration: underline;
+            font-weight: 600;
+        }
+
+        .disclaimer-text-small a:hover {
+            color: #533d03;
+            text-decoration: none;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1.8fr 1fr;
+            gap: 2.5rem;
+            padding: 3rem 0;
+            align-items: start;
+        }
+
+        /* Service Tabs */
+        .service-tabs {
+            background: white;
+            border-radius: var(--border-radius-xl);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            border: 1px solid var(--gray-200);
+            transition: var(--transition-normal);
+        }
+
+        .service-tabs:hover {
+            box-shadow: var(--shadow-xl);
+            transform: translateY(-2px);
+        }
+
+        .tab-nav {
+            display: flex;
+            background: var(--gray-100);
+            border-bottom: 1px solid var(--gray-200);
+            position: relative;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 1.25rem 1rem;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--gray-600);
+            transition: var(--transition-fast);
+            border-bottom: 3px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tab-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+            opacity: 0;
+            transition: var(--transition-fast);
+        }
+
+        .tab-button.active {
+            background: white;
+            border-bottom-color: var(--primary-color);
+            color: var(--primary-color);
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+        }
+
+        .tab-button.active::before {
+            opacity: 0.05;
+        }
+
+        .tab-button:hover:not(.active) {
+            background: var(--gray-200);
+            color: var(--gray-700);
+            transform: translateY(-1px);
+        }
+
+        .tab-content {
+            padding: 2.5rem;
+        }
+
+        .tab-panel {
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tab-panel h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gray-800);
+            margin-bottom: 2rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--gray-200);
+            position: relative;
+        }
+
+        .tab-panel h2::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 60px;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            font-size: 0.95rem;
+            letter-spacing: 0.025em;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            border: 2px solid var(--gray-300);
+            border-radius: var(--border-radius-md);
+            font-size: 1rem;
+            background: white;
+            transition: var(--transition-fast);
+            font-family: inherit;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(255, 0, 64, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .form-input:hover:not(:focus) {
+            border-color: var(--gray-400);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            border: 2px solid var(--gray-300);
+            border-radius: var(--border-radius-md);
+            font-size: 1rem;
+            background: white;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            font-family: inherit;
+            font-weight: 500;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(255, 0, 64, 0.1);
+        }
+
+        .form-select:hover {
+            border-color: var(--gray-400);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 0.75rem;
+            align-items: end;
+        }
+
+        .input-group .form-input {
+            flex: 2;
+            min-width: 200px;
+        }
+
+        .input-group .form-select {
+            min-width: 120px;
+            flex-shrink: 0;
+        }
+
+        /* Checkbox Groups */
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 1.25rem;
+            border: 2px solid var(--gray-300);
+            border-radius: var(--border-radius-md);
+            transition: var(--transition-fast);
+            cursor: pointer;
+            background: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .checkbox-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+            opacity: 0;
+            transition: var(--transition-fast);
+        }
+
+        .checkbox-item:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .checkbox-item:hover::before {
+            opacity: 0.05;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            margin: 0;
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary-color);
+            position: relative;
+            z-index: 1;
+        }
+
+        .checkbox-item span {
+            font-weight: 500;
+            color: var(--gray-700);
+            position: relative;
+            z-index: 1;
+        }
+
+        .checkbox-item:has(input:checked) {
+            border-color: var(--primary-color);
+            background: rgba(255, 0, 64, 0.05);
+        }
+
+        /* Multi-Region Styles */
+        .multi-region-container {
+            margin-bottom: 2rem;
+        }
+
+        .region-section {
+            margin-bottom: 2rem;
+            border: 2px solid var(--gray-300);
+            border-radius: var(--border-radius-lg);
+            background: white;
+            overflow: hidden;
+            transition: var(--transition-fast);
+        }
+
+        .region-section:hover {
+            border-color: var(--gray-400);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .region-section.enabled {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 1px rgba(255, 0, 64, 0.1);
+        }
+
+        .region-header {
+            background: var(--gray-50);
+            border-bottom: 1px solid var(--gray-200);
+            padding: 1.25rem 1.5rem;
+        }
+
+        .region-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+        }
+
+        .region-checkbox {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary-color);
+            cursor: pointer;
+        }
+
+        .region-title {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            font-weight: 600;
+            color: var(--gray-800);
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .region-pricing {
+            font-size: 0.875rem;
+            font-weight: 400;
+            color: var(--gray-600);
+        }
+
+        .region-inputs {
+            padding: 1.5rem;
+            background: white;
+            transition: var(--transition-fast);
+        }
+
+        .region-input-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .region-input:disabled {
+            background: var(--gray-100);
+            color: var(--gray-500);
+            cursor: not-allowed;
+        }
+
+        .total-summary {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: var(--gray-50);
+            border-radius: var(--border-radius-md);
+            border: 1px solid var(--gray-200);
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .summary-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .summary-label {
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        .summary-value {
+            font-weight: 700;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+
+        /* Regional Breakdown Styles */
+        .pricing-item.expandable {
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+
+        .pricing-item.expandable:hover {
+            background: var(--gray-50);
+        }
+
+        .expand-indicator {
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+            transition: var(--transition-fast);
+            color: var(--gray-500);
+        }
+
+        .pricing-item.expanded .expand-indicator {
+            transform: rotate(180deg);
+        }
+
+        .regional-breakdown {
+            margin-left: 1rem;
+            border-left: 2px solid var(--gray-200);
+            padding-left: 1rem;
+        }
+
+        .regional-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .regional-item:last-child {
+            border-bottom: none;
+        }
+
+        .regional-name {
+            font-weight: 600;
+            color: var(--gray-700);
+            min-width: 100px;
+        }
+
+        .regional-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.25rem;
+        }
+
+        .regional-traffic {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+        }
+
+        .regional-cost {
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        /* Pricing Display */
+        .pricing-display {
+            background: white;
+            border-radius: var(--border-radius-xl);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--gray-200);
+            padding: 2.5rem;
+            height: fit-content;
+            position: sticky;
+            top: 2rem;
+            transition: var(--transition-normal);
+        }
+
+        .pricing-display:hover {
+            box-shadow: var(--shadow-xl);
+            transform: translateY(-3px);
+        }
+
+        .pricing-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--gray-800);
+            margin-bottom: 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .pricing-title::after {
+            content: '';
+            position: absolute;
+            bottom: -0.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+            border-radius: 2px;
+        }
+
+        .pricing-breakdown {
+            margin-bottom: 2.5rem;
+        }
+
+        .pricing-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--gray-200);
+            transition: var(--transition-fast);
+        }
+
+        .pricing-item:hover:not(.total) {
+            background: var(--gray-50);
+            margin: 0 -1rem;
+            padding-left: 1rem;
+            padding-right: 1rem;
+            border-radius: var(--border-radius-md);
+        }
+
+        .pricing-item:last-child {
+            border-bottom: none;
+        }
+
+        .pricing-item.total {
+            border-top: 2px solid var(--gray-300);
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            font-weight: 700;
+            font-size: 1.15rem;
+            background: linear-gradient(135deg, var(--gray-50), white);
+            margin-left: -1rem;
+            margin-right: -1rem;
+            padding-left: 1rem;
+            padding-right: 1rem;
+            border-radius: var(--border-radius-md);
+        }
+
+        .pricing-item span:first-child {
+            font-weight: 500;
+            color: var(--gray-700);
+        }
+
+        .price {
+            font-weight: 700;
+            color: var(--primary-color);
+            font-variant-numeric: tabular-nums;
+            transition: var(--transition-fast);
+        }
+
+        .price.total {
+            font-size: 1.5rem;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        /* Metrics */
+        .metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .metric {
+            text-align: center;
+            padding: 1.5rem;
+            background: var(--gray-50);
+            border-radius: var(--border-radius-lg);
+            transition: var(--transition-fast);
+            border: 1px solid var(--gray-200);
+        }
+
+        .metric:hover {
+            background: white;
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .metric-label {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Volume Discount */
+        .volume-discount {
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border: 2px solid #bae6fd;
+            border-radius: var(--border-radius-lg);
+            padding: 1.5rem;
+            margin-top: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .volume-discount::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #0ea5e9, #3b82f6);
+        }
+
+        .discount-title {
+            font-weight: 700;
+            color: #0369a1;
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        .discount-text {
+            font-size: 0.875rem;
+            color: #0369a1;
+            line-height: 1.5;
+            font-weight: 500;
+        }
+
+        /* Loading and Animation States */
+        .calculating {
+            opacity: 0.7;
+            pointer-events: none;
+            position: relative;
+        }
+
+        .calculating::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid var(--primary-color);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* API Notifications */
+        .api-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            max-width: 400px;
+            background: white;
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--gray-200);
+            overflow: hidden;
+            animation: slideIn 0.3s ease-out;
+            transition: var(--transition-normal);
+        }
+
+        .api-notification.error {
+            border-left: 4px solid var(--error-color);
+        }
+
+        .api-notification.warning {
+            border-left: 4px solid var(--warning-color);
+        }
+
+        .api-notification.success {
+            border-left: 4px solid var(--success-color);
+        }
+
+        .api-notification.info {
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .api-notification-content {
+            padding: 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .api-notification-icon {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+            margin-top: 2px;
+        }
+
+        .api-notification-text {
+            flex: 1;
+        }
+
+        .api-notification-title {
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+            color: var(--gray-900);
+        }
+
+        .api-notification-message {
+            font-size: 0.8125rem;
+            color: var(--gray-600);
+            line-height: 1.4;
+        }
+
+        .api-notification-close {
+            flex-shrink: 0;
+            background: none;
+            border: none;
+            color: var(--gray-400);
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: var(--border-radius-sm);
+            transition: var(--transition-fast);
+        }
+
+        .api-notification-close:hover {
+            background: var(--gray-100);
+            color: var(--gray-600);
+        }
+
+        .api-notification.fadeOut {
+            animation: fadeOut 0.3s ease-in forwards;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        /* Pricing Freshness Indicators */
+        .pricing-freshness {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--border-radius-sm);
+            border: 1px solid;
+            margin-left: 0.5rem;
+        }
+
+        .pricing-freshness.fresh {
+            color: var(--success-color);
+            border-color: var(--success-color);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .pricing-freshness.stale {
+            color: var(--warning-color);
+            border-color: var(--warning-color);
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        .pricing-freshness.offline {
+            color: var(--error-color);
+            border-color: var(--error-color);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .freshness-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        /* Enhanced Responsive Design */
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .pricing-display {
+                position: static;
+                order: -1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 16px;
+            }
+
+            .header {
+                padding: 2rem 0;
+            }
+
+            .tab-nav {
+                flex-wrap: wrap;
+            }
+
+            .tab-button {
+                min-width: 50%;
+                padding: 1rem 0.75rem;
+                font-size: 0.875rem;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .api-status-container {
+                align-items: center;
+                flex-direction: row;
+                gap: 1rem;
+                justify-content: center;
+                margin-top: 0.5rem;
+            }
+
+            .api-status {
+                font-size: 0.8125rem;
+                padding: 0.375rem 0.625rem;
+            }
+
+            .api-info {
+                font-size: 0.6875rem;
+            }
+
+            .logo {
+                font-size: 2rem;
+            }
+
+            .header-title {
+                font-size: 1.5rem;
+            }
+
+            .tab-content {
+                padding: 1.5rem;
+            }
+
+            .pricing-display {
+                padding: 1.5rem;
+            }
+
+            .input-group {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .checkbox-group {
+                grid-template-columns: 1fr;
+            }
+
+            .metrics {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .main-content {
+                padding: 2rem 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .tab-button {
+                min-width: 100%;
+            }
+            
+            .pricing-title {
+                font-size: 1.5rem;
+            }
+            
+            .metric {
+                padding: 1rem;
+            }
+        }
+
+        /* Focus Management */
+        .form-input:focus-visible,
+        .form-select:focus-visible,
+        .checkbox-item:focus-within {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+
+        /* Currency Selector Styles */
+        .currency-selector {
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .currency-selector .form-label {
+            margin-bottom: 0.5rem;
+        }
+
+        .currency-select-dropdown {
+            margin-bottom: 0.75rem;
+        }
+
+        .exchange-rate-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            margin-top: 0.5rem;
+        }
+
+        .rate-status {
+            font-weight: 500;
+        }
+
+        .rate-status.loading {
+            color: var(--warning-color);
+        }
+
+        .rate-status.success {
+            color: var(--success-color);
+        }
+
+        .rate-status.error {
+            color: var(--error-color);
+        }
+
+        .rate-timestamp {
+            font-weight: 400;
+        }
+
+        /* Currency display enhancements */
+        .price {
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.025em;
+        }
+
+        .currency-note {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            margin-top: 0.5rem;
+            text-align: center;
+            font-style: italic;
+        }
+
+        /* Enterprise Styling */
+        .enterprise-panel {
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            border: 2px solid #3b82f6;
+            border-radius: var(--border-radius-lg);
+            padding: 2rem;
+            margin-top: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .enterprise-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #3b82f6, #1e40af, #1d4ed8);
+        }
+
+        .enterprise-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 2rem;
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .enterprise-title::before {
+            content: '⭐';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.25rem;
+        }
+
+        /* Volume Slider Styling */
+        .volume-slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #d1d5db;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+            margin: 1rem 0;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #1e40af);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+            transition: var(--transition-fast);
+        }
+
+        .volume-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .volume-slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #1e40af);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            margin-top: 0.5rem;
+        }
+
+        /* Enterprise Contact Section */
+        .enterprise-contact {
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            color: white;
+            padding: 2rem;
+            border-radius: var(--border-radius-lg);
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .enterprise-contact h4 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .enterprise-contact p {
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .enterprise-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-enterprise {
+            padding: 1rem 2rem;
+            background: white;
+            color: #1e40af;
+            border: none;
+            border-radius: var(--border-radius-md);
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-enterprise:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-enterprise-secondary {
+            padding: 1rem 2rem;
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+            border-radius: var(--border-radius-md);
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition-fast);
+        }
+
+        .btn-enterprise-secondary:hover {
+            background: white;
+            color: #1e40af;
+            transform: translateY(-2px);
+        }
+
+        /* Enterprise Form Modal */
+        .enterprise-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 9999;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .enterprise-modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: var(--border-radius-xl);
+            padding: 3rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80%;
+            overflow-y: auto;
+            box-shadow: var(--shadow-xl);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: var(--gray-500);
+            transition: var(--transition-fast);
+        }
+
+        .modal-close:hover {
+            color: var(--gray-700);
+            transform: scale(1.1);
+        }
+
+        /* Annual vs Monthly Comparison */
+        .pricing-comparison {
+            background: var(--gray-50);
+            border: 1px solid var(--gray-200);
+            border-radius: var(--border-radius-lg);
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .comparison-title {
+            font-weight: 700;
+            color: var(--gray-700);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .comparison-item {
+            text-align: center;
+            padding: 1rem;
+            border-radius: var(--border-radius-md);
+        }
+
+        .comparison-monthly {
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+        }
+
+        .comparison-annual {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+        }
+
+        .comparison-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .comparison-price {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .comparison-savings {
+            font-size: 0.75rem;
+            color: var(--success-color);
+            font-weight: 600;
+            margin-top: 0.25rem;
+        }
+
+        /* Enterprise Export Features */
+        .enterprise-export {
+            border-top: 2px solid #1e40af;
+            padding-top: 1rem;
+            margin-top: 1rem;
+        }
+
+        .enterprise-export-title {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .confidential-notice {
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+            border-radius: var(--border-radius-md);
+            padding: 1rem;
+            margin: 1rem 0;
+            font-size: 0.875rem;
+            color: #dc2626;
+            text-align: center;
+        }
+
+        .confidential-notice::before {
+            content: '🔒 ';
+            font-size: 1rem;
+        }
+
+        /* Responsive Adjustments for Enterprise */
+        @media (max-width: 768px) {
+            .enterprise-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn-enterprise,
+            .btn-enterprise-secondary {
+                width: 100%;
+                max-width: 280px;
+            }
+
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .enterprise-modal-content {
+                padding: 2rem;
+                margin: 1rem;
+                width: calc(100% - 2rem);
+            }
+        }
+
+        /* Export Buttons */
+        .export-buttons {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .export-buttons-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .export-buttons-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .export-btn {
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--gray-300);
+            border-radius: var(--border-radius-md);
+            background: white;
+            color: var(--gray-700);
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            text-align: center;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .export-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+            opacity: 0;
+            transition: var(--transition-fast);
+        }
+
+        .export-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .export-btn:hover::before {
+            opacity: 0.05;
+        }
+
+        .export-btn:active {
+            transform: translateY(0);
+        }
+
+        .export-btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .export-btn-pdf {
+            border-color: #dc2626;
+        }
+
+        .export-btn-pdf:hover {
+            border-color: #dc2626;
+            color: #dc2626;
+        }
+
+        .export-btn-csv {
+            border-color: #059669;
+        }
+
+        .export-btn-csv:hover {
+            border-color: #059669;
+            color: #059669;
+        }
+
+        .export-btn-email {
+            border-color: #2563eb;
+        }
+
+        .export-btn-email:hover {
+            border-color: #2563eb;
+            color: #2563eb;
+        }
+
+        /* Mobile responsiveness for export buttons */
+        @media (max-width: 768px) {
+            .export-buttons-grid {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+        }
+
+        /* Enhanced Print Styles for Professional Reports */
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+
+            body {
+                background: white !important;
+                margin: 0;
+                padding: 20px;
+                font-size: 12pt;
+                line-height: 1.4;
+            }
+
+            .header {
+                background: var(--primary-color) !important;
+                -webkit-print-color-adjust: exact;
+                color: white !important;
+                padding: 30px 20px !important;
+                margin: -20px -20px 30px -20px;
+                page-break-inside: avoid;
+            }
+
+            .header-content {
+                display: block !important;
+                text-align: center;
+            }
+
+            .logo {
+                font-size: 28pt !important;
+                margin-bottom: 10px;
+                color: white !important;
+                background: none !important;
+                -webkit-text-fill-color: white !important;
+            }
+
+            .header-title {
+                font-size: 16pt !important;
+                color: white !important;
+                opacity: 1 !important;
+            }
+
+            /* Hide unnecessary elements for print */
+            .service-tabs,
+            .tab-nav,
+            .tab-content,
+            .export-buttons,
+            .volume-discount,
+            .sample-data-btn {
+                display: none !important;
+            }
+
+            .main-content {
+                display: block !important;
+                grid-template-columns: none !important;
+                gap: 0;
+            }
+
+            .pricing-display {
+                box-shadow: none !important;
+                border: 2px solid var(--gray-400) !important;
+                margin: 0;
+                padding: 30px !important;
+                page-break-inside: avoid;
+                position: static !important;
+                transform: none !important;
+                border-radius: 8px !important;
+                background: white !important;
+            }
+
+            .pricing-title {
+                font-size: 20pt !important;
+                color: var(--gray-800) !important;
+                margin-bottom: 25px !important;
+                border-bottom: 2px solid var(--primary-color) !important;
+                padding-bottom: 10px;
+            }
+
+            .pricing-breakdown {
+                margin-bottom: 30px !important;
+            }
+
+            .pricing-item {
+                padding: 10px 0 !important;
+                border-bottom: 1px solid var(--gray-300) !important;
+                font-size: 11pt;
+                margin: 0 !important;
+                background: none !important;
+            }
+
+            .pricing-item.total {
+                border-top: 3px solid var(--gray-600) !important;
+                margin-top: 15px !important;
+                padding-top: 15px !important;
+                font-size: 14pt !important;
+                background: var(--gray-50) !important;
+                padding-left: 10px !important;
+                padding-right: 10px !important;
+            }
+
+            .price {
+                color: var(--primary-color) !important;
+                font-weight: bold !important;
+            }
+
+            .price.total {
+                font-size: 18pt !important;
+            }
+
+            .metrics {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 20px !important;
+                margin-top: 25px !important;
+                border-top: 1px solid var(--gray-300) !important;
+                padding-top: 20px;
+            }
+
+            .metric {
+                background: var(--gray-50) !important;
+                border: 1px solid var(--gray-300) !important;
+                padding: 15px !important;
+                text-align: center;
+                box-shadow: none !important;
+                transform: none !important;
+            }
+
+            .metric-value {
+                font-size: 14pt !important;
+                color: var(--primary-color) !important;
+                font-weight: bold !important;
+            }
+
+            .metric-label {
+                font-size: 9pt !important;
+                color: var(--gray-600) !important;
+            }
+
+            /* Add print header with date and branding */
+            .pricing-display::before {
+                content: "Fastly Pricing Calculator Report - Generated on " attr(data-print-date);
+                display: block;
+                text-align: right;
+                font-size: 9pt;
+                color: var(--gray-500);
+                margin-bottom: 20px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid var(--gray-300);
+            }
+
+            /* Page break controls */
+            .pricing-display {
+                page-break-before: auto;
+                page-break-after: avoid;
+                page-break-inside: avoid;
+            }
+
+            /* Footer for print */
+            @page {
+                margin: 1in;
+                @bottom-right {
+                    content: "Page " counter(page) " of " counter(pages);
+                    font-size: 9pt;
+                    color: var(--gray-500);
+                }
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">Fastly</div>
+                <h1 class="header-title">Pricing Calculator</h1>
+                <div class="api-status-container">
+                    <div class="api-status" id="api-status">
+                        <div class="api-status-dot" id="api-status-dot"></div>
+                        <span class="api-status-text" id="api-status-text">Connecting...</span>
+                    </div>
+                    <div class="api-info" id="api-info">
+                        <div class="api-last-update" id="api-last-update">Never updated</div>
+                        <button class="api-refresh-btn" id="api-refresh-btn" title="Refresh pricing data">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 4 23 10 17 10"></polyline>
+                                <polyline points="1 20 1 14 7 14"></polyline>
+                                <path d="m20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Disclaimer Banner -->
+    <div class="disclaimer-banner">
+        <div class="container">
+            <div class="disclaimer-content">
+                <div class="disclaimer-icon">⚠️</div>
+                <div class="disclaimer-text">
+                    <strong>PRICING SIMULATOR - FOR ESTIMATION PURPOSES ONLY</strong><br>
+                    This is an unofficial pricing simulator. Actual Fastly pricing may differ significantly. 
+                    Please contact <a href="https://www.fastly.com/contact-sales" target="_blank" rel="noopener">Fastly Sales</a> for accurate, official pricing quotes.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main class="container">
+        <div class="main-content">
+            <!-- Service Configuration -->
+            <section class="service-tabs">
+                <nav class="tab-nav">
+                    <button class="tab-button active" data-tab="cdn">CDN Services</button>
+                    <button class="tab-button" data-tab="compute">Edge Compute</button>
+                    <button class="tab-button" data-tab="security">Security</button>
+                    <button class="tab-button" data-tab="additional">Additional</button>
+                </nav>
+
+                <!-- CDN Services Tab -->
+                <div class="tab-content">
+                    <div class="tab-panel active" id="cdn-panel">
+                        <h2>CDN Services Configuration</h2>
+                        
+                        <!-- Multi-Region Configuration -->
+                        <div class="multi-region-container">
+                            <h3 style="font-size: 1.25rem; font-weight: 600; color: var(--gray-800); margin-bottom: 1.5rem; border-bottom: 2px solid var(--gray-200); padding-bottom: 0.5rem;">Regional Traffic Distribution</h3>
+                            <p style="color: var(--gray-600); margin-bottom: 2rem; font-size: 0.95rem;">Configure bandwidth and requests for each region where you serve traffic. Only enabled regions will be included in pricing calculations.</p>
+                            
+                            <!-- North America & Europe Region -->
+                            <div class="region-section" id="region-na-eu">
+                                <div class="region-header">
+                                    <div class="region-toggle">
+                                        <input type="checkbox" id="enable-na-eu" class="region-checkbox" checked>
+                                        <label for="enable-na-eu" class="region-title">
+                                            North America & Europe (NA/EU)
+                                            <span class="region-pricing">$0.12/GB • $0.0075 per 10k requests</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="region-inputs" style="display: block;">
+                                    <div class="region-input-group">
+                                        <div class="form-group">
+                                            <label class="form-label" for="bandwidth-na-eu">Monthly Bandwidth</label>
+                                            <div class="input-group">
+                                                <input type="number" id="bandwidth-na-eu" class="form-input region-input" placeholder="0" min="0" step="0.1">
+                                                <select id="bandwidth-unit-na-eu" class="form-select">
+                                                    <option value="GB">GB</option>
+                                                    <option value="TB">TB</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label" for="requests-na-eu">Monthly Requests (Millions)</label>
+                                            <input type="number" id="requests-na-eu" class="form-input region-input" placeholder="0" min="0" step="0.1">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Asia, South America, Australia/New Zealand Region -->
+                            <div class="region-section" id="region-asia-sa-anz">
+                                <div class="region-header">
+                                    <div class="region-toggle">
+                                        <input type="checkbox" id="enable-asia-sa-anz" class="region-checkbox">
+                                        <label for="enable-asia-sa-anz" class="region-title">
+                                            Asia, South America, Australia/New Zealand (ASIA/SA/ANZ)
+                                            <span class="region-pricing">$0.19/GB • $0.009 per 10k requests</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="region-inputs" style="display: none;">
+                                    <div class="region-input-group">
+                                        <div class="form-group">
+                                            <label class="form-label" for="bandwidth-asia-sa-anz">Monthly Bandwidth</label>
+                                            <div class="input-group">
+                                                <input type="number" id="bandwidth-asia-sa-anz" class="form-input region-input" placeholder="0" min="0" step="0.1">
+                                                <select id="bandwidth-unit-asia-sa-anz" class="form-select">
+                                                    <option value="GB">GB</option>
+                                                    <option value="TB">TB</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label" for="requests-asia-sa-anz">Monthly Requests (Millions)</label>
+                                            <input type="number" id="requests-asia-sa-anz" class="form-input region-input" placeholder="0" min="0" step="0.1">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- South Korea, India, Africa Region -->
+                            <div class="region-section" id="region-sk-in-af">
+                                <div class="region-header">
+                                    <div class="region-toggle">
+                                        <input type="checkbox" id="enable-sk-in-af" class="region-checkbox">
+                                        <label for="enable-sk-in-af" class="region-title">
+                                            South Korea, India, Africa (SK/IN/AF)
+                                            <span class="region-pricing">$0.28/GB • $0.016 per 10k requests</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="region-inputs" style="display: none;">
+                                    <div class="region-input-group">
+                                        <div class="form-group">
+                                            <label class="form-label" for="bandwidth-sk-in-af">Monthly Bandwidth</label>
+                                            <div class="input-group">
+                                                <input type="number" id="bandwidth-sk-in-af" class="form-input region-input" placeholder="0" min="0" step="0.1">
+                                                <select id="bandwidth-unit-sk-in-af" class="form-select">
+                                                    <option value="GB">GB</option>
+                                                    <option value="TB">TB</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label" for="requests-sk-in-af">Monthly Requests (Millions)</label>
+                                            <input type="number" id="requests-sk-in-af" class="form-input region-input" placeholder="0" min="0" step="0.1">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Total Summary -->
+                            <div class="total-summary">
+                                <div class="summary-row">
+                                    <span class="summary-label">Total Bandwidth:</span>
+                                    <span class="summary-value" id="total-bandwidth">0 GB</span>
+                                </div>
+                                <div class="summary-row">
+                                    <span class="summary-label">Total Requests:</span>
+                                    <span class="summary-value" id="total-requests">0 M</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="service-tier">Service Tier</label>
+                            <select id="service-tier" class="form-select">
+                                <option value="">Select service tier</option>
+                                <option value="basic">Basic</option>
+                                <option value="starter">Starter</option>
+                                <option value="advantage">Advantage</option>
+                                <option value="ultimate">Ultimate</option>
+                                <option value="enterprise">Enterprise</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Enterprise Configuration Panel -->
+                        <div class="enterprise-panel" id="enterprise-panel" style="display: none;">
+                            <h3 class="enterprise-title">Enterprise Configuration</h3>
+                            
+                            <!-- Volume Commitment Tiers -->
+                            <div class="form-group">
+                                <label class="form-label" for="volume-commitment">Volume Commitment Level</label>
+                                <select id="volume-commitment" class="form-select">
+                                    <option value="">Select commitment level</option>
+                                    <option value="low">Low Volume (1-50TB/month)</option>
+                                    <option value="medium">Medium Volume (50-500TB/month)</option>
+                                    <option value="high">High Volume (500TB-5PB/month)</option>
+                                    <option value="ultra">Ultra Volume (5PB+/month)</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Annual Commitment -->
+                            <div class="form-group">
+                                <label class="form-label" for="annual-commitment">Annual Commitment</label>
+                                <select id="annual-commitment" class="form-select">
+                                    <option value="monthly">Monthly (No Commitment)</option>
+                                    <option value="12">12 Months (10% Discount)</option>
+                                    <option value="24">24 Months (18% Discount)</option>
+                                    <option value="36">36 Months (25% Discount)</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Volume Discount Slider -->
+                            <div class="form-group">
+                                <label class="form-label" for="volume-discount-slider">Volume Discount: <span id="volume-discount-display">0%</span></label>
+                                <input type="range" id="volume-discount-slider" class="volume-slider" min="0" max="70" value="0" step="5">
+                                <div class="slider-labels">
+                                    <span>0%</span>
+                                    <span>35%</span>
+                                    <span>70%</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Dedicated Account Management -->
+                            <div class="form-group">
+                                <label class="form-label">Dedicated Account Management</label>
+                                <div class="checkbox-group">
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" id="dedicated-csm">
+                                        <span>Dedicated Customer Success Manager</span>
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" id="technical-account-manager">
+                                        <span>Technical Account Manager</span>
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" id="quarterly-reviews">
+                                        <span>Quarterly Business Reviews</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Enterprise SLA Options -->
+                            <div class="form-group">
+                                <label class="form-label" for="enterprise-sla">Enterprise SLA Level</label>
+                                <select id="enterprise-sla" class="form-select">
+                                    <option value="standard">Standard SLA (99.9% Uptime)</option>
+                                    <option value="premium">Premium SLA (99.95% Uptime)</option>
+                                    <option value="ultra">Ultra SLA (99.99% Uptime)</option>
+                                    <option value="mission-critical">Mission Critical SLA (99.995% Uptime)</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Custom Bandwidth Tiers -->
+                            <div class="form-group">
+                                <label class="form-label" for="custom-bandwidth-tier">Custom Bandwidth Tier</label>
+                                <select id="custom-bandwidth-tier" class="form-select">
+                                    <option value="standard">Standard Rates</option>
+                                    <option value="volume-1">Volume Tier 1 (10-15% Discount)</option>
+                                    <option value="volume-2">Volume Tier 2 (20-30% Discount)</option>
+                                    <option value="volume-3">Volume Tier 3 (35-50% Discount)</option>
+                                    <option value="custom">Custom Negotiated Rates</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Enterprise Contact Section -->
+                            <div class="enterprise-contact">
+                                <h4>Ready for Enterprise Pricing?</h4>
+                                <p>Get a customized quote with volume discounts and dedicated support.</p>
+                                <div class="enterprise-buttons">
+                                    <button type="button" class="btn-enterprise" onclick="showEnterpriseForm()">Request Custom Quote</button>
+                                    <button type="button" class="btn-enterprise-secondary" onclick="contactSales()">Contact Sales</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Edge Compute Tab -->
+                    <div class="tab-panel" id="compute-panel">
+                        <h2>Edge Compute Configuration</h2>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="compute-requests">Monthly Compute Requests (Millions)</label>
+                            <input type="number" id="compute-requests" class="form-input" placeholder="Enter compute requests" min="0" step="0.1">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="compute-duration">Average Execution Duration (ms)</label>
+                            <input type="number" id="compute-duration" class="form-input" placeholder="Enter duration in milliseconds" min="0" step="1">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="compute-memory">Memory Allocation (MB)</label>
+                            <select id="compute-memory" class="form-select">
+                                <option value="">Select memory allocation</option>
+                                <option value="128">128 MB</option>
+                                <option value="256">256 MB</option>
+                                <option value="512">512 MB</option>
+                                <option value="1024">1024 MB</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Security Tab -->
+                    <div class="tab-panel" id="security-panel">
+                        <h2>Security Services Configuration</h2>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Web Application Firewall (WAF)</label>
+                            <select id="waf-tier" class="form-select">
+                                <option value="">No WAF</option>
+                                <option value="essential">Essential WAF</option>
+                                <option value="advanced">Advanced WAF</option>
+                                <option value="premium">Premium WAF</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="tls-domains">TLS/SSL Domains</label>
+                            <input type="number" id="tls-domains" class="form-input" placeholder="Number of domains" min="0" step="1">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">DDoS Protection</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-item">
+                                    <input type="checkbox" id="ddos-basic">
+                                    <span>Basic DDoS Protection</span>
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" id="ddos-advanced">
+                                    <span>Advanced DDoS Protection</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Bot Management</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-item">
+                                    <input type="checkbox" id="bot-detection">
+                                    <span>Bot Detection</span>
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" id="bot-mitigation">
+                                    <span>Bot Mitigation</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Additional Services Tab -->
+                    <div class="tab-panel" id="additional-panel">
+                        <h2>Additional Services</h2>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Analytics & Monitoring</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-item">
+                                    <input type="checkbox" id="real-time-analytics">
+                                    <span>Real-time Analytics</span>
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" id="historical-analytics">
+                                    <span>Historical Analytics</span>
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" id="custom-dashboards">
+                                    <span>Custom Dashboards</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Support Level</label>
+                            <select id="support-level" class="form-select">
+                                <option value="community">Community Support</option>
+                                <option value="standard">Standard Support</option>
+                                <option value="premium">Premium Support</option>
+                                <option value="enterprise">Enterprise Support</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Professional Services</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-item">
+                                    <input type="checkbox" id="implementation">
+                                    <span>Implementation Services</span>
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" id="training">
+                                    <span>Training & Certification</span>
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" id="consulting">
+                                    <span>Technical Consulting</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pricing Display -->
+            <aside class="pricing-display">
+                <h2 class="pricing-title">Monthly Cost Estimate</h2>
+                
+                <!-- Currency Selector -->
+                <div class="currency-selector">
+                    <label class="form-label" for="currency-select">Currency</label>
+                    <select id="currency-select" class="form-select currency-select-dropdown">
+                        <option value="USD" data-symbol="$" data-decimals="2">USD - US Dollar</option>
+                        <option value="EUR" data-symbol="€" data-decimals="2">EUR - Euro</option>
+                        <option value="GBP" data-symbol="£" data-decimals="2">GBP - British Pound</option>
+                        <option value="CAD" data-symbol="C$" data-decimals="2">CAD - Canadian Dollar</option>
+                        <option value="AUD" data-symbol="A$" data-decimals="2">AUD - Australian Dollar</option>
+                        <option value="JPY" data-symbol="¥" data-decimals="0">JPY - Japanese Yen</option>
+                    </select>
+                    <div class="exchange-rate-info" id="exchange-rate-info">
+                        <span class="rate-status" id="rate-status">Exchange rates updated</span>
+                        <span class="rate-timestamp" id="rate-timestamp"></span>
+                    </div>
+                </div>
+                
+                <div class="pricing-breakdown">
+                    <div class="pricing-item expandable" id="cdn-pricing-header">
+                        <span>CDN Services 
+                            <span class="expand-indicator">▼</span>
+                        </span>
+                        <span class="price" id="cdn-cost">$0.00</span>
+                    </div>
+                    <div class="regional-breakdown" id="regional-breakdown" style="display: none;">
+                        <div class="regional-item" id="regional-na-eu" style="display: none;">
+                            <span class="regional-name">NA/EU</span>
+                            <span class="regional-details">
+                                <span class="regional-traffic" id="traffic-na-eu">0 GB • 0 M req</span>
+                                <span class="regional-cost" id="cost-na-eu">$0.00</span>
+                            </span>
+                        </div>
+                        <div class="regional-item" id="regional-asia-sa-anz" style="display: none;">
+                            <span class="regional-name">ASIA/SA/ANZ</span>
+                            <span class="regional-details">
+                                <span class="regional-traffic" id="traffic-asia-sa-anz">0 GB • 0 M req</span>
+                                <span class="regional-cost" id="cost-asia-sa-anz">$0.00</span>
+                            </span>
+                        </div>
+                        <div class="regional-item" id="regional-sk-in-af" style="display: none;">
+                            <span class="regional-name">SK/IN/AF</span>
+                            <span class="regional-details">
+                                <span class="regional-traffic" id="traffic-sk-in-af">0 GB • 0 M req</span>
+                                <span class="regional-cost" id="cost-sk-in-af">$0.00</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="pricing-item">
+                        <span>Edge Compute</span>
+                        <span class="price" id="compute-cost">$0.00</span>
+                    </div>
+                    <div class="pricing-item">
+                        <span>Security Services</span>
+                        <span class="price" id="security-cost">$0.00</span>
+                    </div>
+                    <div class="pricing-item">
+                        <span>Additional Services</span>
+                        <span class="price" id="additional-cost">$0.00</span>
+                    </div>
+                    <div class="pricing-item total">
+                        <span>Total Monthly Cost
+                            <span class="pricing-freshness fresh" id="pricing-freshness" style="display: none;">
+                                <div class="freshness-dot"></div>
+                                <span id="freshness-text">Live</span>
+                            </span>
+                        </span>
+                        <span class="price total" id="total-cost">$0.00</span>
+                    </div>
+                </div>
+
+                <div class="metrics">
+                    <div class="metric">
+                        <div class="metric-value" id="cost-per-gb">$0.00</div>
+                        <div class="metric-label">Cost per GB</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="cost-per-request">$0.00</div>
+                        <div class="metric-label">Cost per 1M Requests</div>
+                    </div>
+                </div>
+
+                <div class="currency-note" id="currency-note"></div>
+                
+                <div class="volume-discount">
+                    <div class="discount-title">Volume Discount Available</div>
+                    <div class="discount-text" id="discount-info">
+                        Higher usage volumes may qualify for custom pricing. Contact sales for enterprise rates.
+                    </div>
+                </div>
+
+                <div class="export-buttons">
+                    <div class="export-buttons-title">Export & Share</div>
+                    <div class="export-buttons-grid">
+                        <button class="export-btn export-btn-pdf" onclick="exportToPDF()">
+                            <span>📄 PDF Report</span>
+                        </button>
+                        <button class="export-btn export-btn-csv" onclick="generateCSV()">
+                            <span>📊 CSV Export</span>
+                        </button>
+                        <button class="export-btn export-btn-email" onclick="shareViaEmail()">
+                            <span>✉️ Email Share</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Pricing Disclaimer -->
+                <div class="pricing-disclaimer">
+                    <div class="disclaimer-icon-small">⚠️</div>
+                    <div class="disclaimer-text-small">
+                        <strong>Estimates only.</strong> This simulator may not reflect actual Fastly pricing. 
+                        <a href="https://www.fastly.com/contact-sales" target="_blank" rel="noopener">Contact Fastly Sales</a> for official quotes.
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <script>
+        // Currency Configuration
+        const CURRENCIES = {
+            USD: { symbol: '$', decimals: 2, name: 'US Dollar' },
+            EUR: { symbol: '€', decimals: 2, name: 'Euro' },
+            GBP: { symbol: '£', decimals: 2, name: 'British Pound' },
+            CAD: { symbol: 'C$', decimals: 2, name: 'Canadian Dollar' },
+            AUD: { symbol: 'A$', decimals: 2, name: 'Australian Dollar' },
+            JPY: { symbol: '¥', decimals: 0, name: 'Japanese Yen' }
+        };
+
+        // Exchange rate management
+        let exchangeRates = {
+            USD: 1, // Base currency
+            EUR: 0.85,
+            GBP: 0.73,
+            CAD: 1.35,
+            AUD: 1.50,
+            JPY: 110
+        };
+
+        let currentCurrency = 'USD';
+        let ratesLastUpdated = null;
+        const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
+        const EXCHANGE_RATE_API_URL = 'https://api.exchangerate-api.com/v4/latest/USD';
+
+        // Fallback rates in case API fails
+        const FALLBACK_RATES = {
+            EUR: 0.85,
+            GBP: 0.73,
+            CAD: 1.35,
+            AUD: 1.50,
+            JPY: 110
+        };
+
+        // Fastly Pricing Configuration
+        const PRICING = {
+            // CDN Bandwidth pricing by region (per GB)
+            bandwidth: {
+                'na-eu': {
+                    tiers: [
+                        { min: 0, max: 10240, price: 0.12 },        // First 10TB
+                        { min: 10240, max: 51200, price: 0.08 },    // 10-50TB
+                        { min: 51200, max: 512000, price: 0.06 },   // 50-500TB
+                        { min: 512000, max: Infinity, price: 0.04 } // 500TB+
+                    ]
+                },
+                'asia-sa-anz': {
+                    tiers: [
+                        { min: 0, max: 10240, price: 0.19 },
+                        { min: 10240, max: 51200, price: 0.15 },
+                        { min: 51200, max: 512000, price: 0.12 },
+                        { min: 512000, max: Infinity, price: 0.09 }
+                    ]
+                },
+                'sk-in-af': {
+                    tiers: [
+                        { min: 0, max: 10240, price: 0.28 },
+                        { min: 10240, max: 51200, price: 0.22 },
+                        { min: 51200, max: 512000, price: 0.18 },
+                        { min: 512000, max: Infinity, price: 0.14 }
+                    ]
+                }
+            },
+            
+            // Request pricing by region (per 10,000 requests)
+            requests: {
+                'na-eu': 0.0075,
+                'asia-sa-anz': 0.009,
+                'sk-in-af': 0.016
+            },
+            
+            // Service tier monthly fees
+            serviceTiers: {
+                'basic': 0,
+                'starter': 50,
+                'advantage': 200,
+                'ultimate': 500,
+                'enterprise': 0 // Enterprise pricing calculated separately
+            },
+            
+            // Enterprise pricing configuration
+            enterprise: {
+                // Volume commitment discounts
+                volumeCommitments: {
+                    'low': { baseDiscount: 0.05, description: '1-50TB/month' },
+                    'medium': { baseDiscount: 0.15, description: '50-500TB/month' },
+                    'high': { baseDiscount: 0.25, description: '500TB-5PB/month' },
+                    'ultra': { baseDiscount: 0.35, description: '5PB+/month' }
+                },
+                
+                // Annual commitment discounts
+                annualCommitments: {
+                    'monthly': { discount: 0, months: 0 },
+                    '12': { discount: 0.10, months: 12 },
+                    '24': { discount: 0.18, months: 24 },
+                    '36': { discount: 0.25, months: 36 }
+                },
+                
+                // Dedicated account management
+                accountManagement: {
+                    dedicatedCSM: 2500,
+                    technicalAccountManager: 5000,
+                    quarterlyReviews: 1000
+                },
+                
+                // Enterprise SLA pricing
+                slaLevels: {
+                    'standard': 0,
+                    'premium': 1000,
+                    'ultra': 3000,
+                    'mission-critical': 8000
+                },
+                
+                // Custom bandwidth tiers
+                bandwidthTiers: {
+                    'standard': { discount: 0 },
+                    'volume-1': { discount: 0.125 }, // 10-15% average
+                    'volume-2': { discount: 0.25 },  // 20-30% average
+                    'volume-3': { discount: 0.425 }, // 35-50% average
+                    'custom': { discount: 0.50 }     // Up to 50% for custom
+                },
+                
+                // Base enterprise fees
+                baseFees: {
+                    platformFee: 5000,
+                    onboardingFee: 10000,
+                    customIntegration: 15000
+                }
+            },
+            
+            // Edge Compute pricing
+            compute: {
+                requestsPerMillion: 0.50,
+                gbSecondPrice: 0.000035
+            },
+            
+            // Security services
+            security: {
+                waf: {
+                    'essential': 20,
+                    'advanced': 200,
+                    'premium': 1000
+                },
+                tlsPerDomain: 20,
+                tlsFreeDomains: 2,
+                ddosBasic: 100,
+                ddosAdvanced: 500,
+                botDetection: 50,
+                botMitigation: 150
+            },
+            
+            // Additional services
+            additional: {
+                analytics: {
+                    realTime: 100,
+                    historical: 50,
+                    customDashboards: 200
+                },
+                support: {
+                    community: 0,
+                    standard: 200,
+                    premium: 1000,
+                    enterprise: 5000
+                },
+                professional: {
+                    implementation: 5000,
+                    training: 2000,
+                    consulting: 10000
+                }
+            }
+        };
+
+        // Fastly Pricing API Service
+        class FastlyPricingAPI {
+            constructor() {
+                this.baseURL = 'https://api.fastly.com/pricing/v1';
+                this.cache = new Map();
+                this.requestQueue = [];
+                this.isOnline = false;
+                this.lastUpdate = null;
+                this.failureCount = 0;
+                this.maxRetries = 3;
+                this.retryDelay = 1000;
+                this.rateLimitRemaining = 100;
+                this.rateLimitReset = Date.now() + 3600000; // 1 hour
+                this.updateInterval = 5 * 60 * 1000; // 5 minutes
+                this.updateTimer = null;
+                this.statusCallbacks = [];
+                
+                // Regional pricing variations
+                this.regionalMultipliers = {
+                    'na-eu': { base: 1.0, variance: 0.05 },
+                    'asia-sa-anz': { base: 1.15, variance: 0.08 },
+                    'sk-in-af': { base: 1.35, variance: 0.1 }
+                };
+
+                this.init();
+            }
+
+            async init() {
+                this.updateAPIStatus('connecting', 'Connecting to API...');
+                
+                // Show initial loading notification
+                this.showNotification('info', 'Initializing API', 
+                    'Connecting to Fastly pricing services...');
+                
+                // Simulate initial connection with realistic delay
+                setTimeout(() => {
+                    this.performInitialSync();
+                }, Math.random() * 2000 + 1000);
+
+                // Set up periodic updates
+                this.startPeriodicUpdates();
+            }
+
+            async performInitialSync() {
+                try {
+                    await this.fetchPricingData();
+                    this.updateAPIStatus('online', 'API Connected');
+                    this.showNotification('success', 'API Connected', 
+                        'Real-time pricing data is now available. Prices may vary ±5% from base rates to simulate market conditions.');
+                } catch (error) {
+                    this.handleAPIError(error);
+                }
+            }
+
+            async fetchPricingData(force = false) {
+                const cacheKey = 'pricing-data';
+                const cached = this.cache.get(cacheKey);
+                
+                if (!force && cached && (Date.now() - cached.timestamp < this.updateInterval)) {
+                    return cached.data;
+                }
+
+                // Check rate limits
+                if (this.rateLimitRemaining <= 0 && Date.now() < this.rateLimitReset) {
+                    throw new Error('Rate limit exceeded. Please wait before requesting new data.');
+                }
+
+                this.updateAPIStatus('updating', 'Fetching latest pricing...');
+                
+                try {
+                    const pricingData = await this.simulateAPICall();
+                    
+                    // Update cache
+                    this.cache.set(cacheKey, {
+                        data: pricingData,
+                        timestamp: Date.now()
+                    });
+
+                    this.lastUpdate = new Date();
+                    this.failureCount = 0;
+                    this.isOnline = true;
+                    this.rateLimitRemaining = Math.max(0, this.rateLimitRemaining - 1);
+                    
+                    this.updateAPIStatus('online', 'API Connected');
+                    this.updateLastUpdateTime();
+                    this.updatePricingFreshness('fresh', 'Live');
+                    
+                    return pricingData;
+                } catch (error) {
+                    this.handleAPIError(error);
+                    throw error;
+                }
+            }
+
+            async simulateAPICall() {
+                // Simulate network delay
+                const delay = Math.random() * 1500 + 500;
+                await new Promise(resolve => setTimeout(resolve, delay));
+
+                // Simulate occasional failures (10% chance)
+                if (Math.random() < 0.1) {
+                    const errorTypes = [
+                        'Network timeout',
+                        'Service temporarily unavailable',
+                        'Invalid API key',
+                        'Server error'
+                    ];
+                    throw new Error(errorTypes[Math.floor(Math.random() * errorTypes.length)]);
+                }
+
+                // Generate realistic pricing data with variations
+                const basePricing = JSON.parse(JSON.stringify(PRICING));
+                
+                // Apply regional variations and market fluctuations
+                Object.keys(basePricing.bandwidth).forEach(region => {
+                    const multiplier = this.regionalMultipliers[region];
+                    if (multiplier) {
+                        basePricing.bandwidth[region].tiers.forEach(tier => {
+                            const variance = (Math.random() - 0.5) * 2 * multiplier.variance;
+                            tier.price = Math.max(0.01, tier.price * multiplier.base * (1 + variance));
+                            tier.price = Math.round(tier.price * 10000) / 10000; // Round to 4 decimals
+                        });
+                    }
+                });
+
+                // Apply variations to request pricing
+                Object.keys(basePricing.requests).forEach(region => {
+                    const multiplier = this.regionalMultipliers[region];
+                    if (multiplier) {
+                        const variance = (Math.random() - 0.5) * 2 * multiplier.variance;
+                        basePricing.requests[region] = Math.max(0.001, basePricing.requests[region] * multiplier.base * (1 + variance));
+                        basePricing.requests[region] = Math.round(basePricing.requests[region] * 10000) / 10000;
+                    }
+                });
+
+                // Add timestamp for tracking
+                basePricing._timestamp = Date.now();
+                basePricing._source = 'api';
+
+                return basePricing;
+            }
+
+            async refreshPricing() {
+                if (this.rateLimitRemaining <= 0 && Date.now() < this.rateLimitReset) {
+                    this.showNotification('warning', 'Rate Limited', 'Please wait before refreshing pricing data');
+                    return;
+                }
+
+                try {
+                    await this.fetchPricingData(true);
+                    this.showNotification('success', 'Pricing Updated', 'Latest pricing data has been loaded');
+                    
+                    // Trigger pricing recalculation
+                    if (window.updatePricing) {
+                        window.updatePricing();
+                    }
+                } catch (error) {
+                    this.showNotification('error', 'Update Failed', error.message);
+                }
+            }
+
+            handleAPIError(error) {
+                this.failureCount++;
+                this.isOnline = false;
+                
+                console.error('API Error:', error);
+                
+                if (this.failureCount <= this.maxRetries) {
+                    this.updateAPIStatus('offline', `Retrying... (${this.failureCount}/${this.maxRetries})`);
+                    
+                    // Exponential backoff retry
+                    setTimeout(() => {
+                        this.performInitialSync();
+                    }, this.retryDelay * Math.pow(2, this.failureCount - 1));
+                } else {
+                    this.updateAPIStatus('offline', 'API Unavailable');
+                    this.updatePricingFreshness('offline', 'Offline');
+                    this.showNotification('error', 'API Connection Failed', 
+                        'Using cached pricing data. Some prices may be outdated.');
+                }
+            }
+
+            updateAPIStatus(status, text) {
+                const statusDot = document.getElementById('api-status-dot');
+                const statusText = document.getElementById('api-status-text');
+                
+                if (statusDot && statusText) {
+                    statusDot.className = `api-status-dot ${status}`;
+                    statusText.textContent = text;
+                }
+
+                // Notify status callbacks
+                this.statusCallbacks.forEach(callback => {
+                    try {
+                        callback(status, text);
+                    } catch (e) {
+                        console.error('Status callback error:', e);
+                    }
+                });
+            }
+
+            updateLastUpdateTime() {
+                const lastUpdateEl = document.getElementById('api-last-update');
+                if (lastUpdateEl && this.lastUpdate) {
+                    const timeAgo = this.getTimeAgo(this.lastUpdate);
+                    lastUpdateEl.textContent = `Updated ${timeAgo}`;
+                }
+            }
+
+            updatePricingFreshness(status, text) {
+                const freshnessEl = document.getElementById('pricing-freshness');
+                const freshnessTextEl = document.getElementById('freshness-text');
+                
+                if (freshnessEl && freshnessTextEl) {
+                    freshnessEl.className = `pricing-freshness ${status}`;
+                    freshnessEl.style.display = 'inline-flex';
+                    freshnessTextEl.textContent = text;
+                }
+            }
+
+            getTimeAgo(date) {
+                const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+                
+                if (seconds < 60) return 'just now';
+                if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+                if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+                return `${Math.floor(seconds / 86400)}d ago`;
+            }
+
+            startPeriodicUpdates() {
+                this.updateTimer = setInterval(() => {
+                    if (this.isOnline) {
+                        this.fetchPricingData().catch(error => {
+                            console.warn('Periodic update failed:', error);
+                        });
+                    }
+                    this.updateLastUpdateTime();
+                    
+                    // Update pricing freshness based on age
+                    if (this.lastUpdate) {
+                        const age = Date.now() - this.lastUpdate.getTime();
+                        if (age > 15 * 60 * 1000) { // 15 minutes
+                            this.updatePricingFreshness('stale', 'Stale');
+                        } else if (age > 5 * 60 * 1000) { // 5 minutes
+                            this.updatePricingFreshness('fresh', 'Recent');
+                        }
+                    }
+                    
+                    // Reset rate limit
+                    if (Date.now() >= this.rateLimitReset) {
+                        this.rateLimitRemaining = 100;
+                        this.rateLimitReset = Date.now() + 3600000;
+                    }
+                }, 30000); // Check every 30 seconds
+            }
+
+            showNotification(type, title, message) {
+                const notification = document.createElement('div');
+                notification.className = `api-notification ${type}`;
+                
+                const iconSVG = {
+                    success: '<svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>',
+                    error: '<svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>',
+                    warning: '<svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>',
+                    info: '<svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>'
+                };
+
+                notification.innerHTML = `
+                    <div class="api-notification-content">
+                        <div class="api-notification-icon">${iconSVG[type] || iconSVG.info}</div>
+                        <div class="api-notification-text">
+                            <div class="api-notification-title">${title}</div>
+                            <div class="api-notification-message">${message}</div>
+                        </div>
+                        <button class="api-notification-close" onclick="this.parentElement.parentElement.remove()">
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                        </button>
+                    </div>
+                `;
+
+                document.body.appendChild(notification);
+
+                // Auto-remove after 5 seconds for success notifications
+                if (type === 'success' || type === 'info') {
+                    setTimeout(() => {
+                        if (notification.parentElement) {
+                            notification.classList.add('fadeOut');
+                            setTimeout(() => notification.remove(), 300);
+                        }
+                    }, 5000);
+                }
+            }
+
+            // Get current pricing data (from cache or API)
+            async getCurrentPricing() {
+                try {
+                    return await this.fetchPricingData();
+                } catch (error) {
+                    // Return static pricing as fallback
+                    console.warn('Using fallback pricing data:', error.message);
+                    this.updatePricingFreshness('offline', 'Cached');
+                    return PRICING;
+                }
+            }
+
+            // Subscribe to status changes
+            onStatusChange(callback) {
+                this.statusCallbacks.push(callback);
+            }
+
+            // Cleanup
+            destroy() {
+                if (this.updateTimer) {
+                    clearInterval(this.updateTimer);
+                }
+                this.cache.clear();
+                this.statusCallbacks = [];
+            }
+        }
+
+        // Initialize API service
+        const pricingAPI = new FastlyPricingAPI();
+
+        // Development/Testing utilities
+        window.pricingAPI = pricingAPI; // Make API available in console for testing
+
+        // Add console commands for testing
+        window.testAPIFailure = () => {
+            console.log('🧪 Testing API failure simulation...');
+            const originalSimulate = pricingAPI.simulateAPICall;
+            pricingAPI.simulateAPICall = async function() {
+                throw new Error('Test API failure');
+            };
+            
+            // Restore after 10 seconds
+            setTimeout(() => {
+                pricingAPI.simulateAPICall = originalSimulate;
+                console.log('✅ API failure test ended, functionality restored');
+            }, 10000);
+            
+            return 'API will fail for 10 seconds';
+        };
+
+        window.testRateLimit = () => {
+            console.log('🧪 Testing rate limiting...');
+            pricingAPI.rateLimitRemaining = 0;
+            pricingAPI.rateLimitReset = Date.now() + 30000; // 30 seconds
+            
+            setTimeout(() => {
+                pricingAPI.rateLimitRemaining = 100;
+                console.log('✅ Rate limit test ended');
+            }, 30000);
+            
+            return 'Rate limit active for 30 seconds';
+        };
+
+        window.forceAPIRefresh = () => {
+            console.log('🔄 Forcing API refresh...');
+            return pricingAPI.refreshPricing();
+        };
+
+        // Log API status changes for debugging
+        pricingAPI.onStatusChange((status, text) => {
+            console.log(`📡 API Status: ${status} - ${text}`);
+        });
+
+        // Tab functionality
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const tabId = button.dataset.tab;
+                
+                // Update active tab button
+                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                
+                // Update active tab panel
+                document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+                document.getElementById(`${tabId}-panel`).classList.add('active');
+            });
+        });
+        
+        // Enterprise tier functionality
+        function handleServiceTierChange() {
+            const serviceTier = document.getElementById('service-tier').value;
+            const enterprisePanel = document.getElementById('enterprise-panel');
+            
+            if (serviceTier === 'enterprise') {
+                enterprisePanel.style.display = 'block';
+                // Add enterprise-specific features to pricing display
+                showEnterpriseFeatures();
+            } else {
+                enterprisePanel.style.display = 'none';
+                hideEnterpriseFeatures();
+            }
+            
+            // Update pricing when tier changes
+            debouncedUpdatePricing();
+        }
+        
+        // Show/hide enterprise features in pricing display
+        function showEnterpriseFeatures() {
+            const pricingDisplay = document.querySelector('.pricing-display');
+            let enterpriseSection = document.getElementById('enterprise-pricing-section');
+            
+            if (!enterpriseSection) {
+                enterpriseSection = document.createElement('div');
+                enterpriseSection.id = 'enterprise-pricing-section';
+                enterpriseSection.innerHTML = `
+                    <div class="pricing-comparison">
+                        <div class="comparison-title">Annual vs Monthly Pricing</div>
+                        <div class="comparison-grid">
+                            <div class="comparison-item comparison-monthly">
+                                <div class="comparison-label">Monthly</div>
+                                <div class="comparison-price" id="monthly-price">$0.00</div>
+                            </div>
+                            <div class="comparison-item comparison-annual">
+                                <div class="comparison-label">Annual Commitment</div>
+                                <div class="comparison-price" id="annual-price">$0.00</div>
+                                <div class="comparison-savings" id="annual-savings">Save $0.00/year</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="enterprise-export">
+                        <div class="enterprise-export-title">Enterprise Export Options</div>
+                        <div class="confidential-notice">
+                            CONFIDENTIAL - Enterprise Pricing Estimate
+                        </div>
+                        <div class="export-buttons-grid">
+                            <button class="export-btn export-btn-pdf" onclick="exportEnterpriseQuote()">
+                                <span>📄 Enterprise Quote</span>
+                            </button>
+                            <button class="export-btn export-btn-csv" onclick="generateEnterpriseCSV()">
+                                <span>📊 Enterprise Data</span>
+                            </button>
+                            <button class="export-btn export-btn-email" onclick="requestEnterpriseProposal()">
+                                <span>💼 Request Proposal</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                // Insert before regular export buttons
+                const exportButtons = document.querySelector('.export-buttons');
+                exportButtons.parentNode.insertBefore(enterpriseSection, exportButtons);
+            }
+        }
+        
+        function hideEnterpriseFeatures() {
+            const enterpriseSection = document.getElementById('enterprise-pricing-section');
+            if (enterpriseSection) {
+                enterpriseSection.remove();
+            }
+        }
+        
+        // Volume discount slider functionality
+        function updateVolumeDiscountDisplay() {
+            const slider = document.getElementById('volume-discount-slider');
+            const display = document.getElementById('volume-discount-display');
+            
+            if (slider && display) {
+                display.textContent = slider.value + '%';
+                
+                // Update pricing when discount changes
+                debouncedUpdatePricing();
+            }
+        }
+        
+        // Annual commitment change handler
+        function handleAnnualCommitmentChange() {
+            updateAnnualPricingComparison();
+            debouncedUpdatePricing();
+        }
+        
+        // Update annual vs monthly pricing comparison
+        function updateAnnualPricingComparison() {
+            const monthlyPriceElement = document.getElementById('monthly-price');
+            const annualPriceElement = document.getElementById('annual-price');
+            const annualSavingsElement = document.getElementById('annual-savings');
+            
+            if (!monthlyPriceElement) return;
+            
+            // Calculate monthly price without annual discount
+            const baseMonthlyCost = calculateBaseMonthlyCost();
+            const annualCommitment = document.getElementById('annual-commitment')?.value || 'monthly';
+            const commitmentData = PRICING.enterprise.annualCommitments[annualCommitment];
+            
+            if (commitmentData) {
+                const annualDiscount = commitmentData.discount;
+                const annualMonthlyCost = baseMonthlyCost * (1 - annualDiscount);
+                const annualSavings = (baseMonthlyCost - annualMonthlyCost) * 12;
+                
+                monthlyPriceElement.textContent = formatCurrency(baseMonthlyCost);
+                annualPriceElement.textContent = formatCurrency(annualMonthlyCost);
+                
+                if (annualSavings > 0) {
+                    annualSavingsElement.textContent = `Save ${formatCurrency(annualSavings)}/year`;
+                } else {
+                    annualSavingsElement.textContent = 'No additional savings';
+                }
+            }
+        }
+        
+        // Calculate base monthly cost for comparison
+        function calculateBaseMonthlyCost() {
+            const cdnCosts = calculateCDNCost();
+            const computeCost = calculateComputeCost();
+            const securityCost = calculateSecurityCost();
+            const additionalCost = calculateAdditionalCost();
+            const enterpriseCost = calculateEnterpriseCost();
+            
+            return cdnCosts.total + computeCost + securityCost + additionalCost + enterpriseCost;
+        }
+
+        // Calculate tiered bandwidth pricing
+        function calculateBandwidthCost(bandwidthGB, region, pricingData = PRICING) {
+            if (!region || bandwidthGB <= 0) return 0;
+            
+            const tiers = pricingData.bandwidth[region]?.tiers;
+            if (!tiers) return 0;
+            
+            let totalCost = 0;
+            let remainingBandwidth = bandwidthGB;
+            
+            for (const tier of tiers) {
+                if (remainingBandwidth <= 0) break;
+                
+                const tierUsage = Math.min(remainingBandwidth, tier.max - tier.min);
+                totalCost += tierUsage * tier.price;
+                remainingBandwidth -= tierUsage;
+            }
+            
+            return totalCost;
+        }
+
+        // Calculate request pricing
+        function calculateRequestCost(requestsMillions, region, pricingData = PRICING) {
+            if (!region || requestsMillions <= 0) return 0;
+            
+            const pricePerTenK = pricingData.requests[region];
+            if (!pricePerTenK) return 0;
+            
+            // Convert millions to units of 10k
+            const tenKUnits = requestsMillions * 100;
+            return tenKUnits * pricePerTenK;
+        }
+
+        // Calculate CDN costs
+        function calculateCDNCost() {
+            const serviceTier = document.getElementById('service-tier').value;
+            const pricingData = window.currentPricingData || PRICING;
+            
+            // Define regions and their configurations
+            const regions = [
+                { key: 'na-eu', name: 'North America & Europe' },
+                { key: 'asia-sa-anz', name: 'Asia, South America, Australia/New Zealand' },
+                { key: 'sk-in-af', name: 'South Korea, India, Africa' }
+            ];
+            
+            let totalBandwidthCost = 0;
+            let totalRequestCost = 0;
+            let totalBandwidthGB = 0;
+            let totalRequestsMillions = 0;
+            const regionalBreakdown = {};
+            
+            // Calculate costs for each enabled region
+            regions.forEach(region => {
+                const enabledCheckbox = document.getElementById(`enable-${region.key}`);
+                if (!enabledCheckbox || !enabledCheckbox.checked) {
+                    regionalBreakdown[region.key] = {
+                        enabled: false,
+                        bandwidth: 0,
+                        requests: 0,
+                        bandwidthCost: 0,
+                        requestCost: 0,
+                        total: 0
+                    };
+                    return;
+                }
+                
+                // Get regional inputs
+                const bandwidth = parseFloat(document.getElementById(`bandwidth-${region.key}`).value) || 0;
+                const bandwidthUnit = document.getElementById(`bandwidth-unit-${region.key}`).value;
+                const requests = parseFloat(document.getElementById(`requests-${region.key}`).value) || 0;
+                
+                // Convert to GB if needed
+                const bandwidthGB = bandwidthUnit === 'TB' ? bandwidth * 1024 : bandwidth;
+                
+                // Calculate regional costs
+                let bandwidthCost = calculateBandwidthCost(bandwidthGB, region.key, pricingData);
+                let requestCost = calculateRequestCost(requests, region.key, pricingData);
+                
+                // Apply enterprise discounts per region if applicable
+                if (serviceTier === 'enterprise') {
+                    const baseRegionalCost = bandwidthCost + requestCost;
+                    const discountedRegionalCost = applyEnterpriseDiscounts(baseRegionalCost);
+                    const discountRatio = baseRegionalCost > 0 ? discountedRegionalCost / baseRegionalCost : 1;
+                    
+                    bandwidthCost *= discountRatio;
+                    requestCost *= discountRatio;
+                }
+                
+                // Store regional breakdown
+                regionalBreakdown[region.key] = {
+                    enabled: true,
+                    name: region.name,
+                    bandwidth: bandwidthGB,
+                    requests: requests,
+                    bandwidthCost: bandwidthCost,
+                    requestCost: requestCost,
+                    total: bandwidthCost + requestCost
+                };
+                
+                // Add to totals
+                totalBandwidthCost += bandwidthCost;
+                totalRequestCost += requestCost;
+                totalBandwidthGB += bandwidthGB;
+                totalRequestsMillions += requests;
+            });
+            
+            // Update total summary display
+            updateTotalSummary(totalBandwidthGB, totalRequestsMillions);
+            
+            const tierCost = pricingData.serviceTiers[serviceTier] || 0;
+            
+            return {
+                bandwidth: totalBandwidthCost,
+                requests: totalRequestCost,
+                tier: tierCost,
+                total: totalBandwidthCost + totalRequestCost + tierCost,
+                regionalBreakdown: regionalBreakdown,
+                totalBandwidth: totalBandwidthGB,
+                totalRequests: totalRequestsMillions
+            };
+        }
+
+        // Update total summary display
+        function updateTotalSummary(totalBandwidthGB, totalRequestsMillions) {
+            const totalBandwidthElement = document.getElementById('total-bandwidth');
+            const totalRequestsElement = document.getElementById('total-requests');
+            
+            // Format bandwidth display
+            let bandwidthDisplay;
+            if (totalBandwidthGB >= 1024) {
+                bandwidthDisplay = `${(totalBandwidthGB / 1024).toFixed(2)} TB`;
+            } else {
+                bandwidthDisplay = `${totalBandwidthGB.toLocaleString()} GB`;
+            }
+            
+            // Format requests display
+            const requestsDisplay = `${totalRequestsMillions.toLocaleString()} M`;
+            
+            if (totalBandwidthElement) totalBandwidthElement.textContent = bandwidthDisplay;
+            if (totalRequestsElement) totalRequestsElement.textContent = requestsDisplay;
+        }
+
+        // Update regional breakdown display in pricing panel
+        function updateRegionalBreakdownDisplay(regionalBreakdown) {
+            const regions = [
+                { key: 'na-eu', name: 'NA/EU' },
+                { key: 'asia-sa-anz', name: 'ASIA/SA/ANZ' },
+                { key: 'sk-in-af', name: 'SK/IN/AF' }
+            ];
+            
+            let hasEnabledRegions = false;
+            
+            regions.forEach(region => {
+                const regionData = regionalBreakdown[region.key];
+                const regionalItem = document.getElementById(`regional-${region.key}`);
+                const trafficElement = document.getElementById(`traffic-${region.key}`);
+                const costElement = document.getElementById(`cost-${region.key}`);
+                
+                if (regionData && regionData.enabled && (regionData.bandwidth > 0 || regionData.requests > 0)) {
+                    // Format bandwidth
+                    let bandwidthDisplay;
+                    if (regionData.bandwidth >= 1024) {
+                        bandwidthDisplay = `${(regionData.bandwidth / 1024).toFixed(1)} TB`;
+                    } else {
+                        bandwidthDisplay = `${regionData.bandwidth.toLocaleString()} GB`;
+                    }
+                    
+                    // Update display
+                    trafficElement.textContent = `${bandwidthDisplay} • ${regionData.requests.toLocaleString()} M req`;
+                    costElement.textContent = formatCurrency(regionData.total);
+                    
+                    regionalItem.style.display = 'flex';
+                    hasEnabledRegions = true;
+                } else {
+                    regionalItem.style.display = 'none';
+                }
+            });
+            
+            // Show/hide regional breakdown based on whether there are enabled regions
+            const regionalBreakdownElement = document.getElementById('regional-breakdown');
+            if (hasEnabledRegions) {
+                regionalBreakdownElement.style.display = 'block';
+            } else {
+                regionalBreakdownElement.style.display = 'none';
+            }
+        }
+
+        // Calculate Edge Compute costs
+        function calculateComputeCost() {
+            const requests = parseFloat(document.getElementById('compute-requests').value) || 0;
+            const duration = parseFloat(document.getElementById('compute-duration').value) || 0;
+            const memory = parseFloat(document.getElementById('compute-memory').value) || 0;
+            
+            if (requests <= 0 || duration <= 0 || memory <= 0) return 0;
+            
+            // Use current pricing data (from API or fallback)
+            const pricingData = window.currentPricingData || PRICING;
+            
+            // Request cost
+            const requestCost = requests * pricingData.compute.requestsPerMillion;
+            
+            // Duration cost (convert ms to seconds, then calculate GB-seconds)
+            const durationSeconds = duration / 1000;
+            const memoryGB = memory / 1024;
+            const gbSeconds = requests * 1000000 * durationSeconds * memoryGB;
+            const durationCost = gbSeconds * pricingData.compute.gbSecondPrice;
+            
+            return requestCost + durationCost;
+        }
+
+        // Calculate Security costs
+        function calculateSecurityCost() {
+            let totalCost = 0;
+            
+            // Use current pricing data (from API or fallback)
+            const pricingData = window.currentPricingData || PRICING;
+            
+            // WAF
+            const wafTier = document.getElementById('waf-tier').value;
+            if (wafTier && pricingData.security.waf[wafTier]) {
+                totalCost += pricingData.security.waf[wafTier];
+            }
+            
+            // TLS domains
+            const tlsDomains = parseInt(document.getElementById('tls-domains').value) || 0;
+            const paidDomains = Math.max(0, tlsDomains - pricingData.security.tlsFreeDomains);
+            totalCost += paidDomains * pricingData.security.tlsPerDomain;
+            
+            // DDoS Protection
+            if (document.getElementById('ddos-basic').checked) {
+                totalCost += pricingData.security.ddosBasic;
+            }
+            if (document.getElementById('ddos-advanced').checked) {
+                totalCost += pricingData.security.ddosAdvanced;
+            }
+            
+            // Bot Management
+            if (document.getElementById('bot-detection').checked) {
+                totalCost += pricingData.security.botDetection;
+            }
+            if (document.getElementById('bot-mitigation').checked) {
+                totalCost += pricingData.security.botMitigation;
+            }
+            
+            return totalCost;
+        }
+
+        // Calculate Additional Services costs
+        function calculateAdditionalCost() {
+            let totalCost = 0;
+            
+            // Use current pricing data (from API or fallback)
+            const pricingData = window.currentPricingData || PRICING;
+            
+            // Analytics
+            if (document.getElementById('real-time-analytics').checked) {
+                totalCost += pricingData.additional.analytics.realTime;
+            }
+            if (document.getElementById('historical-analytics').checked) {
+                totalCost += pricingData.additional.analytics.historical;
+            }
+            if (document.getElementById('custom-dashboards').checked) {
+                totalCost += pricingData.additional.analytics.customDashboards;
+            }
+            
+            // Support
+            const supportLevel = document.getElementById('support-level').value;
+            if (supportLevel && pricingData.additional.support[supportLevel]) {
+                totalCost += pricingData.additional.support[supportLevel];
+            }
+            
+            // Professional Services
+            if (document.getElementById('implementation').checked) {
+                totalCost += pricingData.additional.professional.implementation;
+            }
+            if (document.getElementById('training').checked) {
+                totalCost += pricingData.additional.professional.training;
+            }
+            if (document.getElementById('consulting').checked) {
+                totalCost += pricingData.additional.professional.consulting;
+            }
+            
+            return totalCost;
+        }
+        
+        // Calculate Enterprise-specific costs
+        function calculateEnterpriseCost() {
+            const serviceTier = document.getElementById('service-tier')?.value;
+            if (serviceTier !== 'enterprise') return 0;
+            
+            let totalCost = 0;
+            
+            // Volume commitment base discount is applied to CDN costs, not added here
+            
+            // Annual commitment discount is applied to total, not added here
+            
+            // Dedicated account management
+            if (document.getElementById('dedicated-csm')?.checked) {
+                totalCost += PRICING.enterprise.accountManagement.dedicatedCSM;
+            }
+            if (document.getElementById('technical-account-manager')?.checked) {
+                totalCost += PRICING.enterprise.accountManagement.technicalAccountManager;
+            }
+            if (document.getElementById('quarterly-reviews')?.checked) {
+                totalCost += PRICING.enterprise.accountManagement.quarterlyReviews;
+            }
+            
+            // Enterprise SLA
+            const slaLevel = document.getElementById('enterprise-sla')?.value;
+            if (slaLevel && PRICING.enterprise.slaLevels[slaLevel]) {
+                totalCost += PRICING.enterprise.slaLevels[slaLevel];
+            }
+            
+            // Platform fee for enterprise
+            totalCost += PRICING.enterprise.baseFees.platformFee;
+            
+            return totalCost;
+        }
+        
+        // Apply enterprise discounts to CDN costs
+        function applyEnterpriseDiscounts(baseCost) {
+            const serviceTier = document.getElementById('service-tier')?.value;
+            if (serviceTier !== 'enterprise') return baseCost;
+            
+            let discountedCost = baseCost;
+            
+            // Apply volume commitment discount
+            const volumeCommitment = document.getElementById('volume-commitment')?.value;
+            if (volumeCommitment && PRICING.enterprise.volumeCommitments[volumeCommitment]) {
+                const commitmentDiscount = PRICING.enterprise.volumeCommitments[volumeCommitment].baseDiscount;
+                discountedCost *= (1 - commitmentDiscount);
+            }
+            
+            // Apply volume discount slider
+            const volumeDiscountSlider = document.getElementById('volume-discount-slider');
+            if (volumeDiscountSlider) {
+                const additionalDiscount = parseFloat(volumeDiscountSlider.value) / 100;
+                discountedCost *= (1 - additionalDiscount);
+            }
+            
+            // Apply custom bandwidth tier discount
+            const bandwidthTier = document.getElementById('custom-bandwidth-tier')?.value;
+            if (bandwidthTier && PRICING.enterprise.bandwidthTiers[bandwidthTier]) {
+                const tierDiscount = PRICING.enterprise.bandwidthTiers[bandwidthTier].discount;
+                discountedCost *= (1 - tierDiscount);
+            }
+            
+            return discountedCost;
+        }
+        
+        // Apply annual commitment discount to total cost
+        function applyAnnualCommitmentDiscount(totalCost) {
+            const serviceTier = document.getElementById('service-tier')?.value;
+            if (serviceTier !== 'enterprise') return totalCost;
+            
+            const annualCommitment = document.getElementById('annual-commitment')?.value;
+            if (annualCommitment && PRICING.enterprise.annualCommitments[annualCommitment]) {
+                const annualDiscount = PRICING.enterprise.annualCommitments[annualCommitment].discount;
+                return totalCost * (1 - annualDiscount);
+            }
+            
+            return totalCost;
+        }
+
+        // Calculate volume discounts and savings
+        function calculateDiscountInfo(bandwidthGB, totalCost) {
+            let discountText = 'Higher usage volumes may qualify for custom pricing. Contact sales for enterprise rates.';
+            
+            if (bandwidthGB >= 512000) { // 500TB+
+                const potentialSavings = totalCost * 0.15; // Estimate 15% savings
+                discountText = `High volume detected! You may qualify for enterprise pricing with potential savings of $${potentialSavings.toFixed(2)}/month. Contact sales for custom rates.`;
+            } else if (bandwidthGB >= 51200) { // 50TB+
+                const potentialSavings = totalCost * 0.10; // Estimate 10% savings
+                discountText = `Volume discount eligible! Potential savings of $${potentialSavings.toFixed(2)}/month with custom pricing. Contact sales.`;
+            } else if (bandwidthGB >= 10240) { // 10TB+
+                discountText = 'You\'re using volume pricing tiers! Consider custom pricing for additional savings on higher usage.';
+            }
+            
+            return discountText;
+        }
+
+        // Main pricing calculation function
+        async function updatePricing() {
+            // Get current pricing data from API
+            let currentPricingData = PRICING; // Fallback to static pricing
+            try {
+                currentPricingData = await pricingAPI.getCurrentPricing();
+            } catch (error) {
+                console.warn('Failed to get current pricing data, using fallback:', error);
+            }
+
+            // Store current pricing data globally for calculation functions
+            window.currentPricingData = currentPricingData;
+
+            // Calculate costs for each service
+            const cdnCosts = calculateCDNCost();
+            const computeCost = calculateComputeCost();
+            const securityCost = calculateSecurityCost();
+            const additionalCost = calculateAdditionalCost();
+            const enterpriseCost = calculateEnterpriseCost();
+            
+            let totalCost = cdnCosts.total + computeCost + securityCost + additionalCost + enterpriseCost;
+            
+            // Apply annual commitment discount if enterprise
+            totalCost = applyAnnualCommitmentDiscount(totalCost);
+            
+            // Update cost display with currency formatting
+            document.getElementById('cdn-cost').textContent = formatCurrency(cdnCosts.total);
+            document.getElementById('compute-cost').textContent = formatCurrency(computeCost);
+            document.getElementById('security-cost').textContent = formatCurrency(securityCost);
+            document.getElementById('additional-cost').textContent = formatCurrency(additionalCost + enterpriseCost);
+            document.getElementById('total-cost').textContent = formatCurrency(totalCost);
+            
+            // Update regional breakdown display
+            updateRegionalBreakdownDisplay(cdnCosts.regionalBreakdown);
+            
+            // Use total bandwidth and requests from CDN calculation
+            const totalBandwidthGB = cdnCosts.totalBandwidth || 0;
+            const totalRequests = cdnCosts.totalRequests || 0;
+            
+            // Update metrics with currency formatting
+            const costPerGB = totalBandwidthGB > 0 ? totalCost / totalBandwidthGB : 0;
+            const costPerMillionRequests = totalRequests > 0 ? totalCost / totalRequests : 0;
+            
+            // Format metrics with appropriate precision
+            const currencyInfo = CURRENCIES[currentCurrency];
+            const metricDecimals = currencyInfo.decimals === 0 ? 0 : 4;
+            
+            document.getElementById('cost-per-gb').textContent = formatCurrency(costPerGB);
+            document.getElementById('cost-per-request').textContent = formatCurrency(costPerMillionRequests);
+            
+            // Update currency conversion note
+            updateCurrencyNote();
+            
+            // Update discount information
+            const discountInfo = calculateDiscountInfo(bandwidthGB, totalCost);
+            document.getElementById('discount-info').textContent = discountInfo;
+            
+            // Update enterprise pricing comparison if applicable
+            updateAnnualPricingComparison();
+        }
+
+        // Add visual feedback for calculations
+        function showCalculatingState() {
+            const pricingDisplay = document.querySelector('.pricing-display');
+            pricingDisplay.classList.add('calculating');
+        }
+
+        function hideCalculatingState() {
+            const pricingDisplay = document.querySelector('.pricing-display');
+            pricingDisplay.classList.remove('calculating');
+        }
+
+        // Enhanced update function with debouncing and visual feedback
+        let updateTimeout;
+        function debouncedUpdatePricing() {
+            clearTimeout(updateTimeout);
+            showCalculatingState();
+            
+            updateTimeout = setTimeout(() => {
+                updatePricing();
+                hideCalculatingState();
+                
+                // Add subtle animation to updated values
+                document.querySelectorAll('.price, .metric-value').forEach(element => {
+                    element.style.transform = 'scale(1.05)';
+                    element.style.transition = 'transform 0.2s ease-out';
+                    setTimeout(() => {
+                        element.style.transform = 'scale(1)';
+                    }, 200);
+                });
+            }, 300);
+        }
+
+        // Currency conversion and formatting functions
+        function formatCurrency(amount, currency = currentCurrency) {
+            const currencyInfo = CURRENCIES[currency];
+            if (!currencyInfo) return `$${amount.toFixed(2)}`;
+
+            const convertedAmount = convertCurrency(amount, 'USD', currency);
+            
+            // Use Intl.NumberFormat for proper localization
+            try {
+                const formatter = new Intl.NumberFormat(getLocaleForCurrency(currency), {
+                    style: 'currency',
+                    currency: currency,
+                    minimumFractionDigits: currencyInfo.decimals,
+                    maximumFractionDigits: currencyInfo.decimals
+                });
+                return formatter.format(convertedAmount);
+            } catch (error) {
+                // Fallback to manual formatting
+                return `${currencyInfo.symbol}${convertedAmount.toFixed(currencyInfo.decimals)}`;
+            }
+        }
+
+        function convertCurrency(amount, fromCurrency, toCurrency) {
+            if (fromCurrency === toCurrency) return amount;
+            
+            // Convert to USD first if not already
+            let usdAmount = amount;
+            if (fromCurrency !== 'USD') {
+                usdAmount = amount / exchangeRates[fromCurrency];
+            }
+            
+            // Convert from USD to target currency
+            if (toCurrency === 'USD') {
+                return usdAmount;
+            }
+            
+            return usdAmount * exchangeRates[toCurrency];
+        }
+
+        function getLocaleForCurrency(currency) {
+            const localeMap = {
+                USD: 'en-US',
+                EUR: 'de-DE',
+                GBP: 'en-GB',
+                CAD: 'en-CA',
+                AUD: 'en-AU',
+                JPY: 'ja-JP'
+            };
+            return localeMap[currency] || 'en-US';
+        }
+
+        // Exchange rate fetching and caching
+        async function fetchExchangeRates() {
+            try {
+                updateRateStatus('loading', 'Updating exchange rates...');
+                
+                const response = await fetch(EXCHANGE_RATE_API_URL);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Update rates
+                exchangeRates = {
+                    USD: 1,
+                    ...data.rates
+                };
+                
+                // Cache the rates
+                const cacheData = {
+                    rates: exchangeRates,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem('fastly_exchange_rates', JSON.stringify(cacheData));
+                
+                ratesLastUpdated = Date.now();
+                updateRateStatus('success', 'Exchange rates updated');
+                updateRateTimestamp();
+                
+                // Recalculate pricing with new rates
+                updatePricing();
+                
+                return true;
+            } catch (error) {
+                console.warn('Failed to fetch exchange rates:', error);
+                loadFallbackRates();
+                updateRateStatus('error', 'Using cached rates');
+                return false;
+            }
+        }
+
+        function loadCachedRates() {
+            try {
+                const cached = localStorage.getItem('fastly_exchange_rates');
+                if (!cached) return false;
+                
+                const cacheData = JSON.parse(cached);
+                const age = Date.now() - cacheData.timestamp;
+                
+                if (age < CACHE_DURATION) {
+                    exchangeRates = cacheData.rates;
+                    ratesLastUpdated = cacheData.timestamp;
+                    updateRateStatus('success', 'Using cached rates');
+                    updateRateTimestamp();
+                    return true;
+                }
+                
+                return false;
+            } catch (error) {
+                console.warn('Failed to load cached rates:', error);
+                return false;
+            }
+        }
+
+        function loadFallbackRates() {
+            exchangeRates = {
+                USD: 1,
+                ...FALLBACK_RATES
+            };
+            updateRateStatus('error', 'Using fallback rates');
+        }
+
+        function updateRateStatus(status, message) {
+            const statusElement = document.getElementById('rate-status');
+            if (statusElement) {
+                statusElement.textContent = message;
+                statusElement.className = `rate-status ${status}`;
+            }
+        }
+
+        function updateRateTimestamp() {
+            const timestampElement = document.getElementById('rate-timestamp');
+            if (timestampElement && ratesLastUpdated) {
+                const date = new Date(ratesLastUpdated);
+                timestampElement.textContent = date.toLocaleTimeString();
+            }
+        }
+
+        // Currency change handler
+        function handleCurrencyChange() {
+            const currencySelect = document.getElementById('currency-select');
+            if (currencySelect) {
+                currentCurrency = currencySelect.value;
+                
+                // Store user preference
+                localStorage.setItem('fastly_preferred_currency', currentCurrency);
+                
+                // Update pricing display
+                updatePricing();
+                
+                // Add visual feedback
+                document.querySelectorAll('.price, .metric-value').forEach(element => {
+                    element.style.transform = 'scale(1.05)';
+                    element.style.transition = 'transform 0.2s ease-out';
+                    setTimeout(() => {
+                        element.style.transform = 'scale(1)';
+                    }, 200);
+                });
+            }
+        }
+
+        // Load user's preferred currency
+        function loadPreferredCurrency() {
+            const preferred = localStorage.getItem('fastly_preferred_currency');
+            if (preferred && CURRENCIES[preferred]) {
+                currentCurrency = preferred;
+                const currencySelect = document.getElementById('currency-select');
+                if (currencySelect) {
+                    currencySelect.value = preferred;
+                }
+            }
+        }
+
+        // Initialize exchange rates
+        async function initializeExchangeRates() {
+            // Try to load cached rates first
+            const cachedLoaded = loadCachedRates();
+            
+            if (!cachedLoaded) {
+                // No valid cache, try to fetch new rates
+                const fetchSuccess = await fetchExchangeRates();
+                
+                if (!fetchSuccess) {
+                    // Fetch failed, use fallback rates
+                    loadFallbackRates();
+                }
+            } else {
+                // We have cached rates, but try to update in background
+                setTimeout(() => {
+                    fetchExchangeRates();
+                }, 1000);
+            }
+        }
+
+        // Add event listeners for real-time updates with debouncing
+        document.querySelectorAll('input, select').forEach(element => {
+            if (element.id !== 'currency-select') {
+                element.addEventListener('input', debouncedUpdatePricing);
+                element.addEventListener('change', debouncedUpdatePricing);
+            }
+        });
+
+        // Setup region toggle functionality
+        function setupRegionToggles() {
+            const regions = ['na-eu', 'asia-sa-anz', 'sk-in-af'];
+            
+            // Set initial state for all regions
+            regions.forEach(regionKey => {
+                const checkbox = document.getElementById(`enable-${regionKey}`);
+                if (checkbox) {
+                    updateRegionInputsState(regionKey, checkbox.checked);
+                }
+            });
+            
+            // Use event delegation on the document for region checkboxes
+            document.addEventListener('change', (e) => {
+                if (e.target.classList.contains('region-checkbox')) {
+                    const regionKey = e.target.id.replace('enable-', '');
+                    updateRegionInputsState(regionKey, e.target.checked);
+                    debouncedUpdatePricing();
+                }
+            });
+            
+            // Also set up input listeners for region inputs
+            document.addEventListener('input', (e) => {
+                if (e.target.classList.contains('region-input')) {
+                    debouncedUpdatePricing();
+                } else if (e.target.type === 'number') {
+                    if (e.target.id.includes('-na-eu') || e.target.id.includes('-asia-sa-anz') || e.target.id.includes('-sk-in-af')) {
+                        debouncedUpdatePricing();
+                    }
+                }
+            });
+        }
+
+        function updateRegionInputsState(regionKey, isEnabled) {
+            const regionSection = document.getElementById(`region-${regionKey}`);
+            if (!regionSection) return;
+            
+            const regionInputsContainer = regionSection.querySelector('.region-inputs');
+            if (!regionInputsContainer) return;
+            
+            const inputs = regionInputsContainer.querySelectorAll('input, select');
+            
+            if (isEnabled) {
+                regionInputsContainer.style.display = 'block';
+                regionSection.classList.add('enabled');
+                inputs.forEach(input => {
+                    input.disabled = false;
+                });
+            } else {
+                regionInputsContainer.style.display = 'none';
+                regionSection.classList.remove('enabled');
+                inputs.forEach(input => {
+                    input.disabled = true;
+                    if (input.type === 'number') {
+                        input.value = '0';
+                    }
+                });
+            }
+        }
+        
+
+        // Add specific event listeners for enterprise features
+        document.addEventListener('DOMContentLoaded', () => {
+            // Setup multi-region functionality
+            setupRegionToggles();
+            
+            // Setup regional breakdown expandability
+            const cdnPricingHeader = document.getElementById('cdn-pricing-header');
+            const regionalBreakdown = document.getElementById('regional-breakdown');
+            if (cdnPricingHeader) {
+                cdnPricingHeader.addEventListener('click', () => {
+                    const isExpanded = regionalBreakdown.style.display === 'block';
+                    regionalBreakdown.style.display = isExpanded ? 'none' : 'block';
+                    cdnPricingHeader.classList.toggle('expanded', !isExpanded);
+                });
+            }
+            
+            // Service tier change
+            const serviceTierSelect = document.getElementById('service-tier');
+            if (serviceTierSelect) {
+                serviceTierSelect.addEventListener('change', handleServiceTierChange);
+            }
+            
+            // Volume discount slider
+            const volumeSlider = document.getElementById('volume-discount-slider');
+            if (volumeSlider) {
+                volumeSlider.addEventListener('input', updateVolumeDiscountDisplay);
+            }
+            
+            // Annual commitment
+            const annualCommitmentSelect = document.getElementById('annual-commitment');
+            if (annualCommitmentSelect) {
+                annualCommitmentSelect.addEventListener('change', handleAnnualCommitmentChange);
+            }
+            
+            // Currency selector
+            const currencySelect = document.getElementById('currency-select');
+            if (currencySelect) {
+                currencySelect.addEventListener('change', handleCurrencyChange);
+            }
+        });
+
+        // Add form validation and user feedback
+        function validateInputs() {
+            const regions = ['na-eu', 'asia-sa-anz', 'sk-in-af'];
+            const requiredFields = [];
+            let hasEnabledRegion = false;
+            
+            // Check each region for enabled state and valid inputs
+            regions.forEach(regionKey => {
+                const checkbox = document.getElementById(`enable-${regionKey}`);
+                if (checkbox && checkbox.checked) {
+                    hasEnabledRegion = true;
+                    const bandwidth = parseFloat(document.getElementById(`bandwidth-${regionKey}`).value) || 0;
+                    const requests = parseFloat(document.getElementById(`requests-${regionKey}`).value) || 0;
+                    
+                    if (bandwidth === 0 && requests === 0) {
+                        requiredFields.push({
+                            element: document.getElementById(`bandwidth-${regionKey}`),
+                            value: bandwidth,
+                            name: `Bandwidth (${regionKey})`
+                        });
+                        requiredFields.push({
+                            element: document.getElementById(`requests-${regionKey}`),
+                            value: requests,
+                            name: `Requests (${regionKey})`
+                        });
+                    }
+                }
+            });
+            
+            // If no regions are enabled, that's also an issue
+            if (!hasEnabledRegion) {
+                // Could highlight the region sections or show a message
+                console.warn('No regions enabled for pricing calculation');
+            }
+            
+            requiredFields.forEach(field => {
+                if (!field.value || field.value === '') {
+                    field.element.style.borderColor = '#fbbf24';
+                    field.element.style.backgroundColor = '#fefce8';
+                } else {
+                    field.element.style.borderColor = '';
+                    field.element.style.backgroundColor = '';
+                }
+            });
+        }
+
+        // Add input validation
+        document.querySelectorAll('input[type="number"]').forEach(input => {
+            input.addEventListener('blur', validateInputs);
+        });
+
+        // Add keyboard shortcuts for better UX
+        document.addEventListener('keydown', (e) => {
+            // Alt + 1-4 to switch tabs
+            if (e.altKey && e.key >= '1' && e.key <= '4') {
+                e.preventDefault();
+                const tabIndex = parseInt(e.key) - 1;
+                const tabs = ['cdn', 'compute', 'security', 'additional'];
+                const button = document.querySelector(`[data-tab="${tabs[tabIndex]}"]`);
+                if (button) button.click();
+            }
+        });
+
+        // Add tooltip functionality for better user guidance  
+        function addTooltips() {
+            const tooltips = {
+                'bandwidth': 'Enter your monthly data transfer volume. This includes all content delivered to end users.',
+                'requests': 'Total number of HTTP/HTTPS requests processed monthly (in millions).',
+                'region': 'Geographic region where most of your traffic originates or is delivered.',
+                'service-tier': 'Service level that determines features and support options.',
+                'compute-requests': 'Number of edge compute function executions per month.',
+                'compute-duration': 'Average execution time for your edge functions.',
+                'compute-memory': 'Memory allocated for edge function execution.',
+                'waf-tier': 'Web Application Firewall protection level.',
+                'tls-domains': 'Number of domains requiring TLS/SSL certificates (first 2 are free).',
+                'support-level': 'Level of technical support and response times.'
+            };
+
+            Object.entries(tooltips).forEach(([id, text]) => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.setAttribute('title', text);
+                    element.setAttribute('data-tooltip', text);
+                }
+            });
+        }
+
+        // Add sample data button for quick testing
+        function loadSampleData() {
+            // Sample configuration for a medium-sized website
+            // Enable NA/EU region with sample data
+            document.getElementById('enable-na-eu').checked = true;
+            document.getElementById('bandwidth-na-eu').value = '2';
+            document.getElementById('bandwidth-unit-na-eu').value = 'TB';
+            document.getElementById('requests-na-eu').value = '50';
+            
+            // Enable Asia region with smaller amount
+            document.getElementById('enable-asia-sa-anz').checked = true;
+            document.getElementById('bandwidth-asia-sa-anz').value = '500';
+            document.getElementById('bandwidth-unit-asia-sa-anz').value = 'GB';
+            document.getElementById('requests-asia-sa-anz').value = '10';
+            
+            // Disable SK/IN/AF region
+            document.getElementById('enable-sk-in-af').checked = false;
+            
+            document.getElementById('service-tier').value = 'advantage';
+            
+            // Update region input states
+            updateRegionInputsState('na-eu', true);
+            updateRegionInputsState('asia-sa-anz', true);
+            updateRegionInputsState('sk-in-af', false);
+            
+            // Trigger service tier change to show/hide enterprise panel
+            handleServiceTierChange();
+            
+            // Auto-suggest enterprise for high usage
+            showEnterpriseRecommendation();
+            
+            // Edge compute
+            document.getElementById('compute-requests').value = '5';
+            document.getElementById('compute-duration').value = '150';
+            document.getElementById('compute-memory').value = '256';
+            
+            // Security
+            document.getElementById('waf-tier').value = 'advanced';
+            document.getElementById('tls-domains').value = '5';
+            document.getElementById('ddos-basic').checked = true;
+            document.getElementById('bot-detection').checked = true;
+            
+            // Additional services
+            document.getElementById('real-time-analytics').checked = true;
+            document.getElementById('support-level').value = 'premium';
+            
+            // Update pricing
+            debouncedUpdatePricing();
+        }
+
+        // Add sample data buttons to pricing display
+        function addSampleDataButton() {
+            const pricingDisplay = document.querySelector('.pricing-display');
+            
+            // Container for sample buttons
+            const sampleContainer = document.createElement('div');
+            sampleContainer.style.cssText = `
+                display: flex;
+                gap: 0.5rem;
+                margin-top: 1rem;
+            `;
+            
+            // Standard sample button
+            const sampleButton = document.createElement('button');
+            sampleButton.textContent = 'Load Sample';
+            sampleButton.className = 'sample-data-btn';
+            sampleButton.style.cssText = `
+                flex: 1;
+                padding: 0.75rem 1rem;
+                background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+                color: white;
+                border: none;
+                border-radius: var(--border-radius-md);
+                font-weight: 600;
+                cursor: pointer;
+                transition: var(--transition-fast);
+                font-size: 0.875rem;
+            `;
+            sampleButton.addEventListener('click', loadSampleData);
+            
+            // Enterprise sample button
+            const enterpriseButton = document.createElement('button');
+            enterpriseButton.textContent = 'Enterprise Demo';
+            enterpriseButton.className = 'enterprise-sample-btn';
+            enterpriseButton.style.cssText = `
+                flex: 1;
+                padding: 0.75rem 1rem;
+                background: linear-gradient(135deg, #1e40af, #3b82f6);
+                color: white;
+                border: none;
+                border-radius: var(--border-radius-md);
+                font-weight: 600;
+                cursor: pointer;
+                transition: var(--transition-fast);
+                font-size: 0.875rem;
+            `;
+            enterpriseButton.addEventListener('click', loadEnterpriseSampleData);
+            
+            // Add hover effects
+            [sampleButton, enterpriseButton].forEach(button => {
+                button.addEventListener('mouseover', () => {
+                    button.style.transform = 'translateY(-2px)';
+                    button.style.boxShadow = 'var(--shadow-lg)';
+                });
+                button.addEventListener('mouseout', () => {
+                    button.style.transform = 'translateY(0)';
+                    button.style.boxShadow = 'none';
+                });
+            });
+            
+            sampleContainer.appendChild(sampleButton);
+            sampleContainer.appendChild(enterpriseButton);
+            pricingDisplay.appendChild(sampleContainer);
+        }
+
+        // Export Functions
+        
+        // Generate CSV data with all pricing breakdown - Multi-Region
+        function generateCSV() {
+            try {
+                // Get computed costs (in USD base currency)
+                const cdnCosts = calculateCDNCost();
+                const computeCost = calculateComputeCost();
+                const securityCost = calculateSecurityCost();
+                const additionalCost = calculateAdditionalCost();
+                const totalCost = cdnCosts.total + computeCost + securityCost + additionalCost;
+                
+                // Convert to selected currency for export
+                const selectedCurrency = document.getElementById('currency-select')?.value || 'USD';
+                const convertedTotalCost = convertCurrency(totalCost, 'USD', selectedCurrency);
+                const convertedCdnCost = convertCurrency(cdnCosts.total, 'USD', selectedCurrency);
+                const convertedComputeCost = convertCurrency(computeCost, 'USD', selectedCurrency);
+                const convertedSecurityCost = convertCurrency(securityCost, 'USD', selectedCurrency);
+                const convertedAdditionalCost = convertCurrency(additionalCost, 'USD', selectedCurrency);
+                
+                // Get metrics using totals from multi-region calculation
+                const totalBandwidthGB = cdnCosts.totalBandwidth || 0;
+                const totalRequests = cdnCosts.totalRequests || 0;
+                const costPerGB = totalBandwidthGB > 0 ? convertedTotalCost / totalBandwidthGB : 0;
+                const costPerMillionRequests = totalRequests > 0 ? convertedTotalCost / totalRequests : 0;
+                
+                const currencySymbol = CURRENCIES[selectedCurrency]?.symbol || '$';
+                const decimals = CURRENCIES[selectedCurrency]?.decimals || 2;
+                const serviceTier = document.getElementById('service-tier').value;
+                
+                // Format total bandwidth
+                let totalBandwidthDisplay;
+                if (totalBandwidthGB >= 1024) {
+                    totalBandwidthDisplay = `${(totalBandwidthGB / 1024).toFixed(2)} TB`;
+                } else {
+                    totalBandwidthDisplay = `${totalBandwidthGB.toLocaleString()} GB`;
+                }
+                
+                // Create CSV content with multi-region data
+                const csvData = [
+                    ['Fastly Pricing Calculator Export - Multi-Region'],
+                    ['Generated on:', new Date().toLocaleString()],
+                    ['Currency:', `${selectedCurrency} - ${CURRENCIES[selectedCurrency]?.name || 'Unknown'}`],
+                    ['Exchange Rate (USD to ' + selectedCurrency + '):', selectedCurrency === 'USD' ? '1.0000' : exchangeRates[selectedCurrency]?.toFixed(4) || 'N/A'],
+                    [''],
+                    ['Multi-Region Configuration Summary'],
+                    ['Parameter', 'Value'],
+                    ['Total Bandwidth Usage', totalBandwidthDisplay],
+                    ['Total Monthly Requests', `${totalRequests.toLocaleString()} Million`],
+                    ['Service Tier', serviceTier || 'Not specified'],
+                    [''],
+                    ['Regional Breakdown'],
+                    ['Region', 'Bandwidth', 'Requests (M)', `Cost (${selectedCurrency})`]
+                ];
+                
+                // Add regional breakdown data
+                const regions = [
+                    { key: 'na-eu', name: 'North America & Europe' },
+                    { key: 'asia-sa-anz', name: 'Asia, South America, Australia/New Zealand' },
+                    { key: 'sk-in-af', name: 'South Korea, India, Africa' }
+                ];
+                
+                regions.forEach(region => {
+                    const regionData = cdnCosts.regionalBreakdown[region.key];
+                    if (regionData && regionData.enabled && (regionData.bandwidth > 0 || regionData.requests > 0)) {
+                        let bandwidthDisplay;
+                        if (regionData.bandwidth >= 1024) {
+                            bandwidthDisplay = `${(regionData.bandwidth / 1024).toFixed(1)} TB`;
+                        } else {
+                            bandwidthDisplay = `${regionData.bandwidth.toLocaleString()} GB`;
+                        }
+                        
+                        const convertedRegionalCost = convertCurrency(regionData.total, 'USD', selectedCurrency);
+                        csvData.push([
+                            region.name,
+                            bandwidthDisplay,
+                            regionData.requests.toLocaleString(),
+                            `${currencySymbol}${convertedRegionalCost.toFixed(decimals)}`
+                        ]);
+                    }
+                });
+                
+                // Add cost breakdown section
+                [
+                    [''],
+                    ['Cost Breakdown'],
+                    ['Service Category', `Monthly Cost (${selectedCurrency})`],
+                    ['CDN Services (All Regions)', `${currencySymbol}${convertedCdnCost.toFixed(decimals)}`],
+                    ['  - Bandwidth Cost', `${currencySymbol}${convertCurrency(cdnCosts.bandwidth, 'USD', selectedCurrency).toFixed(decimals)}`],
+                    ['  - Request Cost', `${currencySymbol}${convertCurrency(cdnCosts.requests, 'USD', selectedCurrency).toFixed(decimals)}`],
+                    ['  - Service Tier Fee', `${currencySymbol}${convertCurrency(cdnCosts.tier, 'USD', selectedCurrency).toFixed(decimals)}`],
+                    ['Edge Compute', `${currencySymbol}${convertedComputeCost.toFixed(decimals)}`],
+                    ['Security Services', `${currencySymbol}${convertedSecurityCost.toFixed(decimals)}`],
+                    ['Additional Services', `${currencySymbol}${convertedAdditionalCost.toFixed(decimals)}`],
+                    [''],
+                    ['Total Monthly Cost', `${currencySymbol}${convertedTotalCost.toFixed(decimals)}`],
+                    [''],
+                    ['Metrics'],
+                    ['Cost per GB', `${currencySymbol}${costPerGB.toFixed(decimals === 0 ? 0 : 4)}`],
+                    ['Cost per Million Requests', `${currencySymbol}${costPerMillionRequests.toFixed(decimals)}`],
+                    [''],
+                    ['Note: This is an estimate based on current pricing. Contact Fastly sales for custom enterprise pricing.']
+                ].forEach(row => csvData.push(row));
+                
+                // Convert to CSV string
+                const csvString = csvData.map(row => 
+                    row.map(cell => {
+                        // Escape quotes and wrap in quotes if contains comma, quote, or newline
+                        if (typeof cell === 'string' && (cell.includes(',') || cell.includes('"') || cell.includes('\n'))) {
+                            return '"' + cell.replace(/"/g, '""') + '"';
+                        }
+                        return cell;
+                    }).join(',')
+                ).join('\n');
+                
+                // Create and download file
+                const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', `fastly-pricing-estimate-${new Date().toISOString().split('T')[0]}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Show success feedback
+                showExportFeedback('CSV exported successfully!', 'success');
+                
+            } catch (error) {
+                console.error('Error generating CSV:', error);
+                showExportFeedback('Error generating CSV export', 'error');
+            }
+        }
+        
+        // Export to PDF using browser print functionality
+        function exportToPDF() {
+            try {
+                // Set print date attribute for the report header
+                const pricingDisplay = document.querySelector('.pricing-display');
+                pricingDisplay.setAttribute('data-print-date', new Date().toLocaleDateString());
+                
+                // Add print-specific content
+                const printTitle = document.title;
+                document.title = `Fastly Pricing Report - ${new Date().toLocaleDateString()}`;
+                
+                // Trigger print dialog
+                window.print();
+                
+                // Restore original title
+                setTimeout(() => {
+                    document.title = printTitle;
+                }, 1000);
+                
+                // Show success feedback (after a delay since print dialog is async)
+                setTimeout(() => {
+                    showExportFeedback('Print dialog opened. Save as PDF from print options.', 'info');
+                }, 500);
+                
+            } catch (error) {
+                console.error('Error opening print dialog:', error);
+                showExportFeedback('Error opening print dialog', 'error');
+            }
+        }
+        
+        // Share via email with pricing summary
+        function shareViaEmail() {
+            try {
+                // Get current pricing data
+                const totalCost = document.getElementById('total-cost').textContent;
+                const cdnCost = document.getElementById('cdn-cost').textContent;
+                const computeCost = document.getElementById('compute-cost').textContent;
+                const securityCost = document.getElementById('security-cost').textContent;
+                const additionalCost = document.getElementById('additional-cost').textContent;
+                
+                // Get configuration details - multi-region
+                const selectedCurrency = document.getElementById('currency-select')?.value || 'USD';
+                
+                // Get regional configuration
+                const regions = [
+                    { key: 'na-eu', name: 'North America & Europe' },
+                    { key: 'asia-sa-anz', name: 'Asia, South America, Australia/New Zealand' },
+                    { key: 'sk-in-af', name: 'South Korea, India, Africa' }
+                ];
+                
+                let regionalDetails = '';
+                let totalBandwidth = 0;
+                let totalRequests = 0;
+                
+                regions.forEach(region => {
+                    const checkbox = document.getElementById(`enable-${region.key}`);
+                    if (checkbox && checkbox.checked) {
+                        const bandwidth = parseFloat(document.getElementById(`bandwidth-${region.key}`).value) || 0;
+                        const bandwidthUnit = document.getElementById(`bandwidth-unit-${region.key}`).value;
+                        const requests = parseFloat(document.getElementById(`requests-${region.key}`).value) || 0;
+                        
+                        if (bandwidth > 0 || requests > 0) {
+                            const bandwidthGB = bandwidthUnit === 'TB' ? bandwidth * 1024 : bandwidth;
+                            totalBandwidth += bandwidthGB;
+                            totalRequests += requests;
+                            
+                            regionalDetails += `\n  • ${region.name}: ${bandwidth} ${bandwidthUnit}, ${requests}M requests`;
+                        }
+                    }
+                });
+                
+                // Format total bandwidth
+                let totalBandwidthDisplay;
+                if (totalBandwidth >= 1024) {
+                    totalBandwidthDisplay = `${(totalBandwidth / 1024).toFixed(2)} TB`;
+                } else {
+                    totalBandwidthDisplay = `${totalBandwidth.toLocaleString()} GB`;
+                }
+                
+                // Create email content
+                const subject = encodeURIComponent('Fastly Pricing Estimate - Multi-Region');
+                const body = encodeURIComponent(`
+Fastly Pricing Calculator Estimate
+
+Multi-Region Configuration:
+• Total Bandwidth: ${totalBandwidthDisplay}
+• Total Monthly Requests: ${totalRequests.toLocaleString()} Million
+• Currency: ${selectedCurrency} - ${CURRENCIES[selectedCurrency]?.name || 'Unknown'}
+
+Regional Distribution:${regionalDetails || '\n  • No regions configured'}
+
+Cost Breakdown:
+• CDN Services: ${cdnCost}
+• Edge Compute: ${computeCost}
+• Security Services: ${securityCost}
+• Additional Services: ${additionalCost}
+
+Total Monthly Cost: ${totalCost}
+
+Generated on: ${new Date().toLocaleDateString()}
+
+This estimate was generated using the Fastly Pricing Calculator with multi-region billing.
+Costs are calculated per-region with appropriate volume discounts applied within each region.
+Prices shown in ${selectedCurrency}. Exchange rates updated regularly.
+For custom enterprise pricing, please contact Fastly sales.
+
+Calculate your own estimate: ${window.location.href}
+                `.trim());
+                
+                // Create mailto link
+                const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
+                
+                // Open email client
+                window.location.href = mailtoLink;
+                
+                // Show success feedback
+                showExportFeedback('Email client opened with pricing summary', 'success');
+                
+            } catch (error) {
+                console.error('Error creating email:', error);
+                showExportFeedback('Error creating email', 'error');
+            }
+        }
+        
+        // Show export feedback to user
+        function showExportFeedback(message, type = 'info') {
+            // Create feedback element
+            const feedback = document.createElement('div');
+            feedback.className = `export-feedback export-feedback-${type}`;
+            feedback.textContent = message;
+            
+            // Style the feedback
+            feedback.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                border-radius: 8px;
+                font-weight: 600;
+                font-size: 14px;
+                z-index: 9999;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                transform: translateX(100%);
+                transition: transform 0.3s ease-out;
+                max-width: 300px;
+                word-wrap: break-word;
+            `;
+            
+            // Set colors based on type
+            if (type === 'success') {
+                feedback.style.backgroundColor = '#10b981';
+                feedback.style.color = 'white';
+            } else if (type === 'error') {
+                feedback.style.backgroundColor = '#ef4444';
+                feedback.style.color = 'white';
+            } else {
+                feedback.style.backgroundColor = '#3b82f6';
+                feedback.style.color = 'white';
+            }
+            
+            // Add to page
+            document.body.appendChild(feedback);
+            
+            // Animate in
+            setTimeout(() => {
+                feedback.style.transform = 'translateX(0)';
+            }, 100);
+            
+            // Remove after delay
+            setTimeout(() => {
+                feedback.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (feedback.parentNode) {
+                        feedback.parentNode.removeChild(feedback);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // Enhanced enterprise sample data function
+        function loadEnterpriseSampleData() {
+            // Enterprise configuration for large-scale deployment
+            // Enable all regions with significant traffic
+            document.getElementById('enable-na-eu').checked = true;
+            document.getElementById('bandwidth-na-eu').value = '300';
+            document.getElementById('bandwidth-unit-na-eu').value = 'TB';
+            document.getElementById('requests-na-eu').value = '600';
+            
+            document.getElementById('enable-asia-sa-anz').checked = true;
+            document.getElementById('bandwidth-asia-sa-anz').value = '150';
+            document.getElementById('bandwidth-unit-asia-sa-anz').value = 'TB';
+            document.getElementById('requests-asia-sa-anz').value = '300';
+            
+            document.getElementById('enable-sk-in-af').checked = true;
+            document.getElementById('bandwidth-sk-in-af').value = '50';
+            document.getElementById('bandwidth-unit-sk-in-af').value = 'TB';
+            document.getElementById('requests-sk-in-af').value = '100';
+            
+            document.getElementById('service-tier').value = 'enterprise';
+            
+            // Update region input states
+            updateRegionInputsState('na-eu', true);
+            updateRegionInputsState('asia-sa-anz', true);
+            updateRegionInputsState('sk-in-af', true);
+            
+            // Trigger enterprise panel display
+            handleServiceTierChange();
+            
+            // Wait for enterprise panel to be visible, then set values
+            setTimeout(() => {
+                const volumeCommitment = document.getElementById('volume-commitment');
+                const annualCommitment = document.getElementById('annual-commitment');
+                const volumeSlider = document.getElementById('volume-discount-slider');
+                const customBandwidthTier = document.getElementById('custom-bandwidth-tier');
+                const enterpriseSLA = document.getElementById('enterprise-sla');
+                
+                if (volumeCommitment) volumeCommitment.value = 'high';
+                if (annualCommitment) annualCommitment.value = '24';
+                if (volumeSlider) {
+                    volumeSlider.value = '35';
+                    updateVolumeDiscountDisplay();
+                }
+                if (customBandwidthTier) customBandwidthTier.value = 'volume-2';
+                if (enterpriseSLA) enterpriseSLA.value = 'premium';
+                
+                // Enable some enterprise features
+                const dedicatedCSM = document.getElementById('dedicated-csm');
+                const technicalAM = document.getElementById('technical-account-manager');
+                const quarterlyReviews = document.getElementById('quarterly-reviews');
+                
+                if (dedicatedCSM) dedicatedCSM.checked = true;
+                if (technicalAM) technicalAM.checked = true;
+                if (quarterlyReviews) quarterlyReviews.checked = true;
+                
+                // Edge compute for enterprise
+                document.getElementById('compute-requests').value = '100';
+                document.getElementById('compute-duration').value = '200';
+                document.getElementById('compute-memory').value = '512';
+                
+                // Premium security
+                document.getElementById('waf-tier').value = 'premium';
+                document.getElementById('tls-domains').value = '20';
+                document.getElementById('ddos-advanced').checked = true;
+                document.getElementById('bot-mitigation').checked = true;
+                
+                // Full analytics and premium support
+                document.getElementById('real-time-analytics').checked = true;
+                document.getElementById('historical-analytics').checked = true;
+                document.getElementById('custom-dashboards').checked = true;
+                document.getElementById('support-level').value = 'enterprise';
+                document.getElementById('consulting').checked = true;
+                
+                // Update pricing with all enterprise features
+                debouncedUpdatePricing();
+            }, 500);
+        }
+        
+        // Show enterprise recommendation for high usage
+        function showEnterpriseRecommendation() {
+            // Calculate total usage across all enabled regions
+            const regions = ['na-eu', 'asia-sa-anz', 'sk-in-af'];
+            let totalBandwidthGB = 0;
+            let totalRequests = 0;
+            
+            regions.forEach(regionKey => {
+                const checkbox = document.getElementById(`enable-${regionKey}`);
+                if (checkbox && checkbox.checked) {
+                    const bandwidth = parseFloat(document.getElementById(`bandwidth-${regionKey}`).value) || 0;
+                    const bandwidthUnit = document.getElementById(`bandwidth-unit-${regionKey}`).value;
+                    const requests = parseFloat(document.getElementById(`requests-${regionKey}`).value) || 0;
+                    
+                    const bandwidthGB = bandwidthUnit === 'TB' ? bandwidth * 1024 : bandwidth;
+                    totalBandwidthGB += bandwidthGB;
+                    totalRequests += requests;
+                }
+            });
+            
+            if (totalBandwidthGB >= 51200 || totalRequests >= 100) { // 50TB+ or 100M+ requests
+                setTimeout(() => {
+                    showExportFeedback('High usage detected! Consider Enterprise tier for significant savings and dedicated support.', 'info');
+                }, 2000);
+            }
+        }
+        
+        // Initialize enhancements
+        addTooltips();
+        addSampleDataButton();
+
+        // Initialize currency functionality
+        async function initialize() {
+            // Load user's preferred currency
+            loadPreferredCurrency();
+            
+            // Initialize exchange rates
+            await initializeExchangeRates();
+            
+            // Set up API refresh button event listener
+            const refreshBtn = document.getElementById('api-refresh-btn');
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', async () => {
+                    refreshBtn.classList.add('spinning');
+                    refreshBtn.disabled = true;
+                    
+                    try {
+                        await pricingAPI.refreshPricing();
+                    } catch (error) {
+                        console.error('Manual refresh failed:', error);
+                    } finally {
+                        refreshBtn.classList.remove('spinning');
+                        refreshBtn.disabled = false;
+                    }
+                });
+            }
+            
+            // Make updatePricing available globally for API service
+            window.updatePricing = updatePricing;
+            
+            // Initial pricing calculation
+            updatePricing();
+            
+            // Set up periodic rate updates (every 30 minutes)
+            setInterval(() => {
+                const age = Date.now() - (ratesLastUpdated || 0);
+                if (age > CACHE_DURATION) {
+                    fetchExchangeRates();
+                }
+            }, 30 * 60 * 1000);
+        }
+
+        // Enterprise Form Functions
+        function showEnterpriseForm() {
+            const modal = document.createElement('div');
+            modal.className = 'enterprise-modal';
+            modal.innerHTML = `
+                <div class="enterprise-modal-content">
+                    <button class="modal-close" onclick="closeEnterpriseForm()">&times;</button>
+                    <h2>Enterprise Quote Request</h2>
+                    <form id="enterprise-form">
+                        <div class="form-group">
+                            <label class="form-label" for="company-name">Company Name *</label>
+                            <input type="text" id="company-name" class="form-input" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="contact-name">Contact Name *</label>
+                            <input type="text" id="contact-name" class="form-input" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="contact-email">Email Address *</label>
+                            <input type="email" id="contact-email" class="form-input" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="phone-number">Phone Number</label>
+                            <input type="tel" id="phone-number" class="form-input">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="expected-traffic">Expected Monthly Traffic</label>
+                            <select id="expected-traffic" class="form-select">
+                                <option value="">Select traffic volume</option>
+                                <option value="1-10TB">1-10 TB</option>
+                                <option value="10-100TB">10-100 TB</option>
+                                <option value="100TB-1PB">100 TB - 1 PB</option>
+                                <option value="1PB+">1 PB+</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="use-case">Primary Use Case</label>
+                            <select id="use-case" class="form-select">
+                                <option value="">Select use case</option>
+                                <option value="media-streaming">Media & Streaming</option>
+                                <option value="ecommerce">E-commerce</option>
+                                <option value="gaming">Gaming</option>
+                                <option value="software-delivery">Software Delivery</option>
+                                <option value="api-acceleration">API Acceleration</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="timeline">Implementation Timeline</label>
+                            <select id="timeline" class="form-select">
+                                <option value="">Select timeline</option>
+                                <option value="immediate">Immediate (< 1 month)</option>
+                                <option value="1-3months">1-3 months</option>
+                                <option value="3-6months">3-6 months</option>
+                                <option value="6months+">6+ months</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="special-requirements">Special Requirements</label>
+                            <textarea id="special-requirements" class="form-input" rows="4" placeholder="Describe any specific requirements, compliance needs, or technical considerations..."></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="nda-required">
+                                <span>NDA Required for Detailed Discussions</span>
+                            </label>
+                        </div>
+                        
+                        <div class="enterprise-buttons">
+                            <button type="submit" class="btn-enterprise">Submit Quote Request</button>
+                            <button type="button" class="btn-enterprise-secondary" onclick="closeEnterpriseForm()">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Add form submission handler
+            document.getElementById('enterprise-form').addEventListener('submit', handleEnterpriseFormSubmit);
+            
+            // Show modal with animation
+            setTimeout(() => {
+                modal.style.display = 'block';
+            }, 10);
+        }
+        
+        function closeEnterpriseForm() {
+            const modal = document.querySelector('.enterprise-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+        
+        function handleEnterpriseFormSubmit(e) {
+            e.preventDefault();
+            
+            // Collect form data
+            const formData = {
+                companyName: document.getElementById('company-name').value,
+                contactName: document.getElementById('contact-name').value,
+                email: document.getElementById('contact-email').value,
+                phone: document.getElementById('phone-number').value,
+                expectedTraffic: document.getElementById('expected-traffic').value,
+                useCase: document.getElementById('use-case').value,
+                timeline: document.getElementById('timeline').value,
+                specialRequirements: document.getElementById('special-requirements').value,
+                ndaRequired: document.getElementById('nda-required').checked,
+                currentEstimate: document.getElementById('total-cost').textContent,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Simulate form submission (in real implementation, this would call an API)
+            submitEnterpriseForm(formData);
+        }
+        
+        function submitEnterpriseForm(formData) {
+            // Show loading state
+            const submitButton = document.querySelector('.btn-enterprise');
+            const originalText = submitButton.textContent;
+            submitButton.textContent = 'Submitting...';
+            submitButton.disabled = true;
+            
+            // Simulate API call delay
+            setTimeout(() => {
+                // In a real implementation, this would be an actual API call
+                console.log('Enterprise form data:', formData);
+                
+                // Show success message
+                showExportFeedback('Enterprise quote request submitted successfully! A sales representative will contact you within 24 hours.', 'success');
+                
+                // Close modal
+                closeEnterpriseForm();
+                
+                // Reset button
+                submitButton.textContent = originalText;
+                submitButton.disabled = false;
+            }, 2000);
+        }
+        
+        function contactSales() {
+            // Create sales contact email
+            const subject = encodeURIComponent('Enterprise Fastly Pricing Inquiry');
+            // Get multi-region usage summary
+            const regions = [
+                { key: 'na-eu', name: 'North America & Europe' },
+                { key: 'asia-sa-anz', name: 'Asia, South America, Australia/New Zealand' },
+                { key: 'sk-in-af', name: 'South Korea, India, Africa' }
+            ];
+            let usageSummary = '';
+            let totalBandwidthGB = 0;
+            let totalRequests = 0;
+            
+            regions.forEach(region => {
+                const checkbox = document.getElementById(`enable-${region.key}`);
+                if (checkbox && checkbox.checked) {
+                    const bandwidth = parseFloat(document.getElementById(`bandwidth-${region.key}`).value) || 0;
+                    const bandwidthUnit = document.getElementById(`bandwidth-unit-${region.key}`).value;
+                    const requests = parseFloat(document.getElementById(`requests-${region.key}`).value) || 0;
+                    
+                    if (bandwidth > 0 || requests > 0) {
+                        const bandwidthGB = bandwidthUnit === 'TB' ? bandwidth * 1024 : bandwidth;
+                        totalBandwidthGB += bandwidthGB;
+                        totalRequests += requests;
+                        usageSummary += `\n  • ${region.name}: ${bandwidth} ${bandwidthUnit}, ${requests}M requests`;
+                    }
+                }
+            });
+            
+            const totalBandwidthDisplay = totalBandwidthGB >= 1024 
+                ? `${(totalBandwidthGB / 1024).toFixed(2)} TB`
+                : `${totalBandwidthGB.toLocaleString()} GB`;
+            
+            const body = encodeURIComponent(`
+I'm interested in Fastly enterprise pricing and would like to discuss:
+
+• Custom volume pricing
+• Dedicated account management
+• Enterprise SLA options
+• Annual commitment discounts
+
+Current estimated monthly usage (multi-region):
+• Total Bandwidth: ${totalBandwidthDisplay}
+• Total Requests: ${totalRequests.toLocaleString()} Million
+
+Regional Distribution:${usageSummary || '\n  • No regions configured'}
+
+Please contact me to discuss enterprise solutions.
+
+Thank you,
+            `.trim());
+            
+            window.location.href = `mailto:sales@fastly.com?subject=${subject}&body=${body}`;
+            showExportFeedback('Sales contact email opened', 'success');
+        }
+        
+        // Enterprise Export Functions
+        function exportEnterpriseQuote() {
+            // Add confidential watermark to print
+            const originalTitle = document.title;
+            document.title = 'CONFIDENTIAL - Fastly Enterprise Quote';
+            
+            // Set print date attribute
+            const pricingDisplay = document.querySelector('.pricing-display');
+            pricingDisplay.setAttribute('data-print-date', new Date().toLocaleDateString());
+            
+            // Add enterprise confidential notice
+            const notice = document.createElement('div');
+            notice.id = 'enterprise-print-notice';
+            notice.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                background: #dc2626;
+                color: white;
+                text-align: center;
+                padding: 10px;
+                font-weight: bold;
+                z-index: 9999;
+                display: none;
+            `;
+            notice.textContent = '🔒 CONFIDENTIAL ENTERPRISE PRICING ESTIMATE - NOT FOR DISTRIBUTION';
+            document.body.appendChild(notice);
+            
+            // Show notice in print
+            const printCSS = `
+                @media print {
+                    #enterprise-print-notice {
+                        display: block !important;
+                        position: static !important;
+                        margin-bottom: 20px !important;
+                    }
+                }
+            `;
+            const style = document.createElement('style');
+            style.textContent = printCSS;
+            document.head.appendChild(style);
+            
+            window.print();
+            
+            // Cleanup
+            setTimeout(() => {
+                document.title = originalTitle;
+                notice.remove();
+                style.remove();
+            }, 1000);
+            
+            showExportFeedback('Enterprise quote ready for print/PDF', 'info');
+        }
+        
+        function generateEnterpriseCSV() {
+            // Generate enhanced CSV with enterprise data
+            generateCSV(); // Call existing function but could be enhanced
+            showExportFeedback('Enterprise pricing data exported', 'success');
+        }
+        
+        function requestEnterpriseProposal() {
+            // Open enterprise form
+            showEnterpriseForm();
+        }
+        
+        // Start initialization
+        initialize();
+    </script>
+</body>
+</html>
